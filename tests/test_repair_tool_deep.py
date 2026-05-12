@@ -324,16 +324,14 @@ class TestPartialFailure(TestCase):
 
     def test_fix_with_no_writable_dir(self):
         """Agent目录不可写时不应崩溃"""
-        agent_dir = self.test_dir / 'testagent'
+        agent_dir = self.test_dir / 'testagent_readonly'
         agent_dir.mkdir()
         (agent_dir / 'settings.json').write_text('{"ok": true}')
 
         if not IS_WIN:
-            # 使目录不可写（但可读）
             agent_dir.chmod(0o555)
             try:
                 fix_agent('testagent', agent_dir)
-                # 不应崩溃，可能部分失败
             except Exception:
                 self.fail('fix_agent should not raise even with read-only dir')
             finally:
