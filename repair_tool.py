@@ -11,8 +11,14 @@ import json
 import shutil
 import platform
 import stat
+import io
 from pathlib import Path
 from datetime import datetime
+
+# Windows 终端强制 UTF-8 编码
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # 支持的Agent及其常见安装路径
 AGENT_PATHS = {
