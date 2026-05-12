@@ -27,6 +27,26 @@ IS_MAC = sys.platform == 'darwin'
 IS_LINUX = sys.platform.startswith('linux')
 
 
+def _cleanup_backups():
+    """安全清理测试备份"""
+    backup_dir = Path.home() / '.ai_agent_backups'
+    if backup_dir.exists():
+        for item in backup_dir.iterdir():
+            if item.name.startswith('testagent_') or item.name.startswith('worker_'):
+                try:
+                    shutil.rmtree(item)
+                except (PermissionError, OSError):
+                    try:
+                        for f in item.rglob('*'):
+                            try:
+                                f.chmod(0o755)
+                            except OSError:
+                                pass
+                        shutil.rmtree(item)
+                    except OSError:
+                        pass
+
+
 class TestSpecialCharPaths(TestCase):
     """特殊字符路径测试"""
 
@@ -167,10 +187,7 @@ class TestFileLocking(TestCase):
         self.backup_dir = Path.home() / '.ai_agent_backups'
 
     def tearDown(self):
-        if self.backup_dir.exists():
-            for item in self.backup_dir.iterdir():
-                if item.name.startswith('testagent_'):
-                    shutil.rmtree(item, ignore_errors=True)
+        _cleanup_backups()
 
     def test_config_locked_during_check(self):
         """检查时配置文件被锁定（模拟）"""
@@ -239,10 +256,7 @@ class TestConcurrentSafety(TestCase):
         self.backup_dir = Path.home() / '.ai_agent_backups'
 
     def tearDown(self):
-        if self.backup_dir.exists():
-            for item in self.backup_dir.iterdir():
-                if item.name.startswith('testagent_'):
-                    shutil.rmtree(item, ignore_errors=True)
+        _cleanup_backups()
 
     def test_concurrent_scan(self):
         """多个线程同时扫描不应崩溃"""
@@ -306,10 +320,7 @@ class TestPartialFailure(TestCase):
         self.backup_dir = Path.home() / '.ai_agent_backups'
 
     def tearDown(self):
-        if self.backup_dir.exists():
-            for item in self.backup_dir.iterdir():
-                if item.name.startswith('testagent_'):
-                    shutil.rmtree(item, ignore_errors=True)
+        _cleanup_backups()
 
     def test_fix_with_no_writable_dir(self):
         """Agent目录不可写时不应崩溃"""
@@ -460,10 +471,7 @@ class TestEdgeCases(TestCase):
         self.backup_dir = Path.home() / '.ai_agent_backups'
 
     def tearDown(self):
-        if self.backup_dir.exists():
-            for item in self.backup_dir.iterdir():
-                if item.name.startswith('testagent_'):
-                    shutil.rmtree(item, ignore_errors=True)
+        _cleanup_backups()
 
     def test_empty_agent_dir(self):
         """空Agent目录"""
