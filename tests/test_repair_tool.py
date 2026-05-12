@@ -36,7 +36,7 @@ class TestBasicFunctions(TestCase):
     def test_expand_path_relative(self):
         """测试路径展开 - 相对路径"""
         path = expand_path('.')
-        self.assertEqual(Path(path), Path.cwd())
+        self.assertEqual(Path(path).resolve(), Path.cwd())
 
 
 class TestAgentDetection(TestCase):
