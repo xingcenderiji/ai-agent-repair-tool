@@ -34,17 +34,15 @@ def _cleanup_backups():
         for item in backup_dir.iterdir():
             if item.name.startswith('testagent_') or item.name.startswith('worker_'):
                 try:
+                    # 先修复权限，避免只读备份无法删除
+                    for f in item.rglob('*'):
+                        try:
+                            f.chmod(0o755)
+                        except OSError:
+                            pass
                     shutil.rmtree(item)
                 except (PermissionError, OSError):
-                    try:
-                        for f in item.rglob('*'):
-                            try:
-                                f.chmod(0o755)
-                            except OSError:
-                                pass
-                        shutil.rmtree(item)
-                    except OSError:
-                        pass
+                    pass
 
 
 class TestSpecialCharPaths(TestCase):
