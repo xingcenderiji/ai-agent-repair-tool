@@ -1,0 +1,79 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: AI-Agent-Repair-Windows
+            file_name: AI-Agent-Repair.exe
+          - os: macos-latest
+            artifact_name: AI-Agent-Repair-macOS
+            file_name: AI-Agent-Repair
+          - os: ubuntu-latest
+            artifact_name: AI-Agent-Repair-Linux
+            file_name: AI-Agent-Repair
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install PyInstaller
+      run: pip install pyinstaller
+
+    - name: Build EXE
+      run: pyinstaller --onefile --name AI-Agent-Repair repair_tool.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: dist/${{ matrix.file_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: dist
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v1.0.0
+        name: AI Agent Repair Tool v1.0.0
+        body: |
+          ## AI Agent 智能修复工具 v1.0.0
+
+          全自动识别并修复 AI 开发工具的崩溃、配置损坏、数据丢失问题。
+
+          ### 下载
+          - `AI-Agent-Repair.exe` - Windows 双击运行
+          - `AI-Agent-Repair-macOS` - macOS 运行
+          - `AI-Agent-Repair-Linux` - Linux 运行
+
+          ### 使用方法
+          1. 下载对应平台的文件
+          2. Windows: 双击运行
+          3. Mac/Linux: 终端运行 `./AI-Agent-Repair`
+          4. 自动扫描 → 自动修复
+
+          ### 支持的工具
+          OpenCode, Claude Code, Cursor, Windsurf, Hermes-Agent
+        files: dist/**
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
