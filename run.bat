@@ -1,19 +1,15 @@
 @echo off
 chcp 65001 >nul
-title AI Agent Repair Tool - 全自动模式
+title AI Agent Repair Tool - 操控界面
 echo ============================================================
-echo AI Agent 智能修复工具 - 全自动模式
+echo AI Agent 智能修复工具 - 操控界面
 echo ============================================================
-echo 本工具将自动扫描并修复以下Agent：
-echo   - OpenCode
-echo   - Claude Code
-echo   - Cursor
-echo   - Windsurf
-echo   - Hermes-Agent
+echo 启动后将自动打开浏览器...
+echo 如未打开，请手动访问显示的地址
 echo ============================================================
 echo.
 
-python repair_tool.py
+python gui.py
 
 if errorlevel 1 (
     echo.
