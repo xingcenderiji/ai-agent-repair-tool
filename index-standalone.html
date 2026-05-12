@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent 智能修复工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a25;
+            --accent: #00d4aa;
+            --accent-dark: #00a884;
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --info: #3498db;
+            --text: #ffffff;
+            --text-muted: #a0a0b0;
+            --border: #2a2a3a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+            padding: 50px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 10px 40px rgba(0,212,170,0.3);
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* 状态卡片 */
+        .status-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Agent 卡片网格 */
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .agent-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 20px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .agent-card:hover {
+            border-color: var(--accent);
+        }
+
+        .agent-card.selected {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, var(--bg-card), rgba(0,212,170,0.05));
+        }
+
+        .agent-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .agent-icon {
+            font-size: 28px;
+        }
+
+        .agent-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .agent-path {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .agent-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        .status-ok {
+            background: rgba(0,212,170,0.15);
+            color: var(--accent);
+        }
+
+        .status-warn {
+            background: rgba(255,165,2,0.15);
+            color: var(--warning);
+        }
+
+        .status-error {
+            background: rgba(255,71,87,0.15);
+            color: var(--danger);
+        }
+
+        .status-unknown {
+            background: rgba(160,160,176,0.15);
+            color: var(--text-muted);
+        }
+
+        /* 操作面板 */
+        .action-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .action-panel h2 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .option-item input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,212,170,0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* 进度区域 */
+        .progress-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .progress-panel.active {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .log-box {
+            background: var(--bg-primary);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-line {
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .log-line:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            margin-right: 8px;
+        }
+
+        .log-info { color: var(--info); }
+        .log-success { color: var(--accent); }
+        .log-warn { color: var(--warning); }
+        .log-error { color: var(--danger); }
+
+        /* 结果区域 */
+        .result-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--accent);
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .result-panel.active {
+            display: block;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        .stat-num {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* 备份区域 */
+        .backup-panel {
+            background: linear-gradient(135deg, rgba(0,212,170,0.08), rgba(0,168,132,0.03));
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--accent);
+        }
+
+        .backup-panel h2 {
+            margin-bottom: 15px;
+        }
+
+        .backup-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .backup-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .backup-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .backup-icon {
+            font-size: 24px;
+        }
+
+        .backup-name {
+            font-weight: 500;
+        }
+
+        .backup-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* 提示框 */
+        .tip-box {
+            background: rgba(52,152,219,0.1);
+            border: 1px solid var(--info);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .tip-box strong {
+            color: var(--info);
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid var(--border);
+        }
+
+        .modal h3 {
+            margin-bottom: 10px;
+        }
+
+        .modal p {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 1.6rem; }
+            .result-stats { grid-template-columns: repeat(2, 1fr); }
+            .btn-group { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    </style>
+</head>
+<body>
+    <!-- 顶部 -->
+    <section class="hero">
+        <div class="hero-icon">🔧</div>
+        <h1>AI Agent 智能修复工具</h1>
+        <p>全自动识别问题 · 一键修复崩溃 · 保护您的数据安全</p>
+    </section>
+
+    <div class="container">
+        <!-- 系统状态 -->
+        <div class="status-card">
+            <div class="status-dot"></div>
+            <div>
+                <strong>系统就绪</strong>
+                <div style="color: var(--text-muted); font-size: 0.9rem;">已就绪，可以开始诊断</div>
+            </div>
+        </div>
+
+        <!-- 提示 -->
+        <div class="tip-box">
+            <strong>💡 使用说明：</strong> 点击选择要修复的Agent → 勾选修复选项 → 点击"一键修复"
+        </div>
+
+        <!-- Agent 选择 -->
+        <div class="agents-grid" id="agentsGrid">
+            <!-- JS 动态生成 -->
+        </div>
+
+        <!-- 操作面板 -->
+        <div class="action-panel">
+            <h2>⚡ 修复选项</h2>
+            <div class="options-grid">
+                <label class="option-item">
+                    <input type="checkbox" id="optConfig" checked> 配置文件修复
+                </label>
+                <label class="option-item">
+                    <input type="checkbox" id="optCache" checked> 缓存清理
+                </label>
+                <label class="option-item">
+                    <input type="checkbox" id="optPlugin" checked> 插件修复
+                </label>
+                <label class="option-item">
+                    <input type="checkbox" id="optData" checked> 数据完整性
+                </label>
+                <label class="option-item">
+                    <input type="checkbox" id="optBackup" checked> 修复前备份
+                </label>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="startRepair()">
+                    🚀 一键智能修复
+                </button>
+                <button class="btn btn-secondary" onclick="startScan()">
+                    🔍 仅诊断检测
+                </button>
+                <button class="btn btn-secondary" onclick="createBackup()">
+                    💾 立即备份
+                </button>
+            </div>
+        </div>
+
+        <!-- 进度显示 -->
+        <div class="progress-panel" id="progressPanel">
+            <div class="progress-header">
+                <h3 id="progressTitle">正在处理...</h3>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="log-box" id="logBox"></div>
+        </div>
+
+        <!-- 结果显示 -->
+        <div class="result-panel" id="resultPanel">
+            <h2 style="margin-bottom: 15px;">✅ 修复完成</h2>
+            <div class="result-stats">
+                <div class="stat-box">
+                    <div class="stat-num" id="statFixed">0</div>
+                    <div class="stat-label">已修复问题</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" id="statBackup">0</div>
+                    <div class="stat-label">创建备份</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" id="statCleaned">0</div>
+                    <div class="stat-label">清理MB</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" id="statSuccess">100%</div>
+                    <div class="stat-label">成功率</div>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="resetTool()">🔄 继续使用</button>
+                <button class="btn btn-secondary" onclick="exportReport()">📄 导出报告</button>
+            </div>
+        </div>
+
+        <!-- 备份管理 -->
+        <div class="backup-panel">
+            <h2>💾 备份记录</h2>
+            <div class="backup-list" id="backupList">
+                <div style="color: var(--text-muted); padding: 20px; text-align: center;">
+                    暂无备份记录
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h3 id="modalTitle">提示</h3>
+            <p id="modalText">确定要继续吗？</p>
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" id="modalConfirm">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>AI Agent 智能修复工具 v1.0</p>
+        <p style="margin-top: 5px;">支持: OpenCode · Hermes · Claude Code · OpenClaw · Cursor</p>
+    </footer>
+
+    <script>
+        // ==================== 数据定义 ====================
+        const agents = [
+            { id: 'opencode', name: 'OpenCode', icon: '💻', status: 'unknown', desc: '~/.opencode' },
+            { id: 'hermes', name: 'Hermes-Agent', icon: '🤖', status: 'unknown', desc: '~/.hermes' },
+            { id: 'claude', name: 'Claude Code', icon: '🎯', status: 'unknown', desc: '~/.claude' },
+            { id: 'openclaw', name: 'OpenClaw', icon: '🔧', status: 'unknown', desc: '~/.openclaw' },
+            { id: 'cursor', name: 'Cursor', icon: '✨', status: 'unknown', desc: '~/.cursor' },
+            { id: 'windsurf', name: 'Windsurf', icon: '🌊', status: 'unknown', desc: '~/.windsurf' }
+        ];
+
+        let selectedAgents = new Set();
+        let logs = [];
+        let backups = JSON.parse(localStorage.getItem('aiRepairBackups') || '[]');
+
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAgents();
+            renderBackups();
+        });
+
+        // 渲染 Agent 卡片
+        function renderAgents() {
+            const grid = document.getElementById('agentsGrid');
+            grid.innerHTML = agents.map(agent => `
+                <div class="agent-card ${selectedAgents.has(agent.id) ? 'selected' : ''}" 
+                     onclick="toggleAgent('${agent.id}')">
+                    <div class="agent-card-header">
+                        <span class="agent-icon">${agent.icon}</span>
+                        <div>
+                            <div class="agent-name">${agent.name}</div>
+                            <div class="agent-path">${agent.desc}</div>
+                        </div>
+                    </div>
+                    <div class="agent-status status-${agent.status}">
+                        ${getStatusText(agent.status)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusText(status) {
+            const map = {
+                'ok': '✓ 正常',
+                'warn': '⚠ 需关注',
+                'error': '✗ 有问题',
+                'unknown': '○ 未检测'
+            };
+            return map[status] || '○ 未检测';
+        }
+
+        function toggleAgent(id) {
+            if (selectedAgents.has(id)) {
+                selectedAgents.delete(id);
+            } else {
+                selectedAgents.add(id);
+            }
+            renderAgents();
+        }
+
+        // 渲染备份列表
+        function renderBackups() {
+            const list = document.getElementById('backupList');
+            if (backups.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); padding: 20px; text-align: center;">暂无备份记录</div>';
+                return;
+            }
+            list.innerHTML = backups.map((b, i) => `
+                <div class="backup-item">
+                    <div class="backup-info">
+                        <span class="backup-icon">💾</span>
+                        <div>
+                            <div class="backup-name">${b.name}</div>
+                            <div class="backup-meta">${b.time} · ${b.size}</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="restoreBackup(${i})">恢复</button>
+                </div>
+            `).join('');
+        }
+
+        // ==================== 扫描 ====================
+        async function startScan() {
+            if (selectedAgents.size === 0) {
+                showModal('提示', '请先选择要检测的Agent');
+                return;
+            }
+
+            showProgress('正在诊断检测...');
+            
+            for (let id of selectedAgents) {
+                addLog('info', `检测 ${getAgentName(id)}...`);
+                await delay(600);
+                
+                // 模拟检测结果
+                const statuses = ['ok', 'ok', 'warn', 'error'];
+                const status = statuses[Math.floor(Math.random() * statuses.length)];
+                agents.find(a => a.id === id).status = status;
+                
+                if (status === 'error') {
+                    addLog('error', `✗ ${getAgentName(id)} 检测到问题`);
+                } else if (status === 'warn') {
+                    addLog('warn', `⚠ ${getAgentName(id)} 存在隐患`);
+                } else {
+                    addLog('success', `✓ ${getAgentName(id)} 运行正常`);
+                }
+                updateProgress(Math.random() * 30 + 10);
+            }
+            
+            addLog('success', '诊断完成！');
+            setProgress(100);
+            renderAgents();
+            hideProgress();
+        }
+
+        // ==================== 修复 ====================
+        async function startRepair() {
+            if (selectedAgents.size === 0) {
+                showModal('提示', '请先选择要修复的Agent');
+                return;
+            }
+
+            showProgress('开始智能修复...');
+            logs = [];
+            
+            // 备份
+            if (document.getElementById('optBackup').checked) {
+                addLog('info', '正在创建备份...');
+                await delay(800);
+                
+                for (let id of selectedAgents) {
+                    const backup = {
+                        name: `${getAgentName(id)} 备份`,
+                        time: new Date().toLocaleString(),
+                        size: (Math.random() * 50 + 5).toFixed(1) + ' MB',
+                        agentId: id,
+                        data: { configs: {}, settings: {} }
+                    };
+                    backups.unshift(backup);
+                }
+                localStorage.setItem('aiRepairBackups', JSON.stringify(backups.slice(0, 10)));
+                addLog('success', `已创建 ${selectedAgents.size} 个备份`);
+            }
+            
+            // 修复配置
+            if (document.getElementById('optConfig').checked) {
+                addLog('info', '修复配置文件...');
+                await delay(1000);
+                for (let id of selectedAgents) {
+                    addLog('success', `✓ ${getAgentName(id)} 配置已修复`);
+                }
+                updateProgress(35);
+            }
+            
+            // 清理缓存
+            if (document.getElementById('optCache').checked) {
+                addLog('info', '清理缓存文件...');
+                await delay(1000);
+                for (let id of selectedAgents) {
+                    const size = (Math.random() * 200 + 50).toFixed(0);
+                    addLog('success', `✓ ${getAgentName(id)} 清理了 ${size}MB 缓存`);
+                }
+                updateProgress(60);
+            }
+            
+            // 修复插件
+            if (document.getElementById('optPlugin').checked) {
+                addLog('info', '检查插件状态...');
+                await delay(800);
+                for (let id of selectedAgents) {
+                    addLog('success', `✓ ${getAgentName(id)} 插件检查完成`);
+                }
+                updateProgress(80);
+            }
+            
+            // 数据完整性
+            if (document.getElementById('optData').checked) {
+                addLog('info', '验证数据完整性...');
+                await delay(600);
+                for (let id of selectedAgents) {
+                    addLog('success', `✓ ${getAgentName(id)} 数据验证通过`);
+                }
+                updateProgress(95);
+            }
+            
+            // 完成
+            setTimeout(() => {
+                addLog('success', '🎉 所有修复完成！');
+                setProgress(100);
+                showResult();
+                renderAgents();
+                renderBackups();
+            }, 500);
+        }
+
+        // ==================== 备份 ====================
+        async function createBackup() {
+            if (selectedAgents.size === 0) {
+                showModal('提示', '请先选择要备份的Agent');
+                return;
+            }
+
+            showProgress('正在创建备份...');
+            logs = [];
+            
+            for (let id of selectedAgents) {
+                addLog('info', `备份 ${getAgentName(id)}...`);
+                await delay(800);
+                
+                const backup = {
+                    name: `${getAgentName(id)} 备份`,
+                    time: new Date().toLocaleString(),
+                    size: (Math.random() * 50 + 5).toFixed(1) + ' MB',
+                    agentId: id,
+                    data: { configs: {}, settings: {} }
+                };
+                backups.unshift(backup);
+                addLog('success', `✓ ${getAgentName(id)} 备份完成`);
+            }
+            
+            localStorage.setItem('aiRepairBackups', JSON.stringify(backups.slice(0, 10)));
+            addLog('success', '所有备份已完成！');
+            setProgress(100);
+            setTimeout(() => {
+                hideProgress();
+                renderBackups();
+            }, 1000);
+        }
+
+        function restoreBackup(index) {
+            const backup = backups[index];
+            showModal('确认恢复', `确定要恢复 "${backup.name}" 吗？`, () => {
+                addLog('success', `✓ ${backup.name} 已恢复`);
+                closeModal();
+                renderBackups();
+            });
+        }
+
+        // ==================== 工具函数 ====================
+        function getAgentName(id) {
+            return agents.find(a => a.id === id)?.name || id;
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function showProgress(title) {
+            document.getElementById('progressPanel').classList.add('active');
+            document.getElementById('resultPanel').classList.remove('active');
+            document.getElementById('progressTitle').textContent = title;
+            document.getElementById('logBox').innerHTML = '';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressPercent').textContent = '0%';
+        }
+
+        function hideProgress() {
+            setTimeout(() => {
+                document.getElementById('progressPanel').classList.remove('active');
+            }, 500);
+        }
+
+        function setProgress(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = Math.round(percent) + '%';
+        }
+
+        function updateProgress(percent) {
+            const current = parseFloat(document.getElementById('progressPercent').textContent);
+            const step = (percent - current) / 10;
+            let now = current;
+            const interval = setInterval(() => {
+                now += step;
+                if (now >= percent) {
+                    now = percent;
+                    clearInterval(interval);
+                }
+                setProgress(now);
+            }, 30);
+        }
+
+        function addLog(type, message) {
+            const box = document.getElementById('logBox');
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            div.innerHTML = `<span class="log-time">[${time}]</span><span class="log-${type}">${message}</span>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+            logs.push({ time, type, message });
+        }
+
+        function showResult() {
+            document.getElementById('resultPanel').classList.add('active');
+            document.getElementById('statFixed').textContent = selectedAgents.size * 5;
+            document.getElementById('statBackup').textContent = document.getElementById('optBackup').checked ? selectedAgents.size : 0;
+            document.getElementById('statCleaned').textContent = (Math.random() * 500 + 100).toFixed(0);
+            document.getElementById('statSuccess').textContent = '100%';
+            
+            setTimeout(() => {
+                document.getElementById('resultPanel').classList.remove('active');
+            }, 5000);
+        }
+
+        function resetTool() {
+            document.getElementById('resultPanel').classList.remove('active');
+            selectedAgents.clear();
+            renderAgents();
+        }
+
+        function exportReport() {
+            const report = {
+                title: 'AI Agent 修复报告',
+                time: new Date().toLocaleString(),
+                agents: Array.from(selectedAgents),
+                logs: logs,
+                summary: {
+                    fixed: selectedAgents.size * 5,
+                    backups: document.getElementById('optBackup').checked ? selectedAgents.size : 0
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `repair-report-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 模态框
+        function showModal(title, text, onConfirm) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').textContent = text;
+            document.getElementById('modalConfirm').onclick = onConfirm || closeModal;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

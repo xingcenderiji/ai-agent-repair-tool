@@ -1,0 +1,4 @@
+# AI Agent Repair Tool Dependencies
+# 打包成可执行文件时需要:
+# pip install pyinstaller
+pyinstaller>=5.0
