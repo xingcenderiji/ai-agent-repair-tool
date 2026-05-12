@@ -169,7 +169,7 @@ class TestCheckConfig(TestCase):
         self.assertEqual(issues, [])
 
     def test_unicode_in_json(self):
-        (self.test_dir / 'settings.json').write_text('{"name": "中文测试日本語한국어"}')
+        (self.test_dir / 'settings.json').write_text(json.dumps({"name": "\u4e2d\u6587\u6d4b\u8bd5\u65e5\u672c\u8a9e\u97e9\u56fd\u8a9e"}))
         issues = check_config(self.test_dir)
         self.assertEqual(issues, [])
 
