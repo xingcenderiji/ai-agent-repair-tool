@@ -2,6 +2,9 @@ name: Build and Release
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -31,8 +34,8 @@ jobs:
     - name: Install PyInstaller
       run: pip install pyinstaller
 
-    - name: Build EXE
-      run: pyinstaller --onefile --name AI-Agent-Repair repair_tool.py
+    - name: Build EXE (GUI mode)
+      run: pyinstaller --onefile --name AI-Agent-Repair --noconsole gui.py
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -62,15 +65,15 @@ jobs:
           全自动识别并修复 AI 开发工具的崩溃、配置损坏、数据丢失问题。
 
           ### 下载
-          - `AI-Agent-Repair.exe` - Windows 双击运行
+          - `AI-Agent-Repair.exe` - Windows 双击运行（自动打开浏览器界面）
           - `AI-Agent-Repair-macOS` - macOS 运行
           - `AI-Agent-Repair-Linux` - Linux 运行
 
           ### 使用方法
           1. 下载对应平台的文件
-          2. Windows: 双击运行
+          2. Windows: 双击 `AI-Agent-Repair.exe`
           3. Mac/Linux: 终端运行 `./AI-Agent-Repair`
-          4. 自动扫描 → 自动修复
+          4. 自动打开浏览器 → 扫描 → 确认 → 修复
 
           ### 支持的工具
           OpenCode, Claude Code, Cursor, Windsurf, Hermes-Agent
