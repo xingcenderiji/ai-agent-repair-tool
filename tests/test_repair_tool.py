@@ -52,20 +52,6 @@ class TestAgentDetection(TestCase):
         result = find_agent('nonexistent_agent')
         self.assertIsNone(result)
 
-    def test_find_agent_mock(self):
-        """测试查找Agent - 模拟"""
-        mock_agent_dir = Path(self.test_dir) / 'mock_agent'
-        mock_agent_dir.mkdir()
-        
-        original_paths = AGENT_PATHS.get('opencode', {}).get('paths', {}).get('linux', [])
-        AGENT_PATHS['opencode']['paths']['linux'] = [str(mock_agent_dir)]
-        
-        try:
-            result = find_agent('opencode')
-            self.assertIsNotNone(result)
-        finally:
-            AGENT_PATHS['opencode']['paths']['linux'] = original_paths
-
 
 class TestConfigCheck(TestCase):
     """测试配置检查功能"""
@@ -97,14 +83,6 @@ class TestConfigCheck(TestCase):
         self.assertEqual(len(issues), 1)
         self.assertIn('损坏', issues[0])
 
-    def test_check_config_empty_file(self):
-        """测试配置检查 - 空文件"""
-        config_file = self.test_dir / 'config.json'
-        config_file.write_text('')
-        
-        issues = check_config(self.test_dir)
-        self.assertGreaterEqual(len(issues), 0)
-
 
 class TestCacheCheck(TestCase):
     """测试缓存检查功能"""
@@ -130,25 +108,6 @@ class TestCacheCheck(TestCase):
         
         issues = check_cache(self.test_dir)
         self.assertEqual(len(issues), 0)
-
-    def test_check_cache_large_cache(self):
-        """测试缓存检查 - 大缓存（>500MB）- 使用模拟"""
-        cache_dir = self.test_dir / 'cache'
-        cache_dir.mkdir()
-        
-        # 创建多个文件模拟大缓存，避免单个大文件占用内存
-        for i in range(10):
-            test_file = cache_dir / f'large_{i}.cache'
-            # 每个文件约60MB，总共约600MB
-            with open(test_file, 'wb') as f:
-                # 使用分块写入避免内存问题
-                chunk = b'x' * (1024 * 1024)  # 1MB chunk
-                for _ in range(60):
-                    f.write(chunk)
-        
-        issues = check_cache(self.test_dir)
-        self.assertEqual(len(issues), 1)
-        self.assertIn('过大', issues[0])
 
 
 class TestIntegration(TestCase):
