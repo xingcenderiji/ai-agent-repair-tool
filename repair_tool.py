@@ -197,7 +197,7 @@ def _remove_readonly(func, path, excinfo):
 
 def fix_agent(agent_id, agent_path):
     """修复Agent"""
-    agent_name = AGENT_PATHS[agent_id]['name']
+    agent_name = AGENT_PATHS.get(agent_id, {}).get('name', agent_id)
     print(f"\n正在修复 {agent_name}...")
 
     # 1. 备份
