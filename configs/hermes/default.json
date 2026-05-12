@@ -1,0 +1,31 @@
+{
+  "agent_name": "Hermes-Agent",
+  "min_supported_version": "1.0.0",
+  "config_files": [
+    "settings.json",
+    "config.json",
+    "hermes.json"
+  ],
+  "cache_dirs": [
+    "cache",
+    "Cache",
+    "temp",
+    "Temp"
+  ],
+  "log_files": [
+    "*.log",
+    "logs/*.log"
+  ],
+  "critical_files": [
+    "settings.json"
+  ],
+  "default_config": {
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "repair_strategies": {
+    "config_corrupted": "replace_with_default",
+    "cache_oversized": "clean_all",
+    "permission_denied": "skip_and_report"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "agent_name": "Cursor",
+  "min_supported_version": "0.1.0",
+  "config_files": [
+    "settings.json",
+    "config.json",
+    "cursor.json"
+  ],
+  "cache_dirs": [
+    "Cache",
+    "cache",
+    "CachedData",
+    "Code Cache",
+    "GPUCache"
+  ],
+  "log_files": [
+    "*.log",
+    "logs/*.log"
+  ],
+  "critical_files": [
+    "settings.json"
+  ],
+  "default_config": {
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "repair_strategies": {
+    "config_corrupted": "replace_with_default",
+    "cache_oversized": "clean_all",
+    "permission_denied": "skip_and_report"
+  }
+}
