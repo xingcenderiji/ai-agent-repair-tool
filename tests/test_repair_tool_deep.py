@@ -34,7 +34,12 @@ def _cleanup_backups():
         for item in backup_dir.iterdir():
             if item.name.startswith('testagent_') or item.name.startswith('worker_'):
                 try:
-                    # 先修复权限，避免只读备份无法删除
+                    # 先修复目录本身权限
+                    try:
+                        item.chmod(0o755)
+                    except OSError:
+                        pass
+                    # 再修复子文件权限
                     for f in item.rglob('*'):
                         try:
                             f.chmod(0o755)
