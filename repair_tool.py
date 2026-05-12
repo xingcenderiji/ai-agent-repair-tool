@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AI Agent Repair Tool
-自动检测并修复 AI 开发工具问题
+全自动识别并修复 AI 开发工具问题 - 无需用户干预
 支持: OpenCode, Claude Code, Cursor, Windsurf, Hermes-Agent
 """
 
@@ -11,6 +11,7 @@ import json
 import shutil
 import platform
 import stat
+import time
 from pathlib import Path
 from datetime import datetime
 
@@ -120,7 +121,6 @@ def check_config(agent_path):
                 with open(config_file, 'r', encoding='utf-8') as f:
                     if cf.endswith('.json'):
                         json.load(f)
-                    # .yaml 文件暂不验证内容，只检查可读性
             except json.JSONDecodeError:
                 issues.append(f"配置文件损坏: {cf}")
             except UnicodeDecodeError:
@@ -160,7 +160,7 @@ def check_cache(agent_path):
 def scan_all():
     """扫描所有Agent"""
     print("=" * 60)
-    print("AI Agent 智能修复工具")
+    print("AI Agent 智能修复工具 - 全自动模式")
     print("=" * 60)
     print(f"系统: {platform.system()} {platform.release()}")
     print(f"时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -198,7 +198,7 @@ def _remove_readonly(func, path, excinfo):
 def fix_agent(agent_id, agent_path):
     """修复Agent"""
     agent_name = AGENT_PATHS.get(agent_id, {}).get('name', agent_id)
-    print(f"\n正在修复 {agent_name}...")
+    print(f"\n  >>> 正在自动修复 {agent_name}...")
 
     # 1. 备份
     backup_dir = Path.home() / ".ai_agent_backups"
@@ -214,11 +214,11 @@ def fix_agent(agent_id, agent_path):
             agent_path, backup_path,
             ignore=shutil.ignore_patterns('cache', 'Cache', 'temp', 'Temp')
         )
-        print(f"  [OK] 已创建备份: {backup_path}")
+        print(f"      [OK] 已创建备份: {backup_path}")
     except PermissionError:
-        print(f"  [!] 备份失败: 权限不足")
+        print(f"      [!] 备份失败: 权限不足")
     except OSError as e:
-        print(f"  [!] 备份失败: {e}")
+        print(f"      [!] 备份失败: {e}")
 
     # 2. 清理缓存
     cache_dirs = ["cache", "Cache", "temp", "Temp", "CachedData"]
@@ -241,7 +241,7 @@ def fix_agent(agent_id, agent_path):
             except PermissionError:
                 pass
     if cleaned > 0:
-        print(f"  [OK] 已清理 {cleaned} 个缓存目录")
+        print(f"      [OK] 已清理 {cleaned} 个缓存目录")
 
     # 3. 修复配置文件
     config_files = ["settings.json", "config.json"]
@@ -260,15 +260,28 @@ def fix_agent(agent_id, agent_path):
                     with open(config_file, 'w', encoding='utf-8') as f:
                         json.dump(default, f, indent=2)
                     fixed += 1
-                    print(f"  [OK] 已修复配置文件: {cf}")
+                    print(f"      [OK] 已修复配置文件: {cf}")
                 except OSError:
-                    print(f"  [!] 修复配置文件失败: {cf}")
+                    print(f"      [!] 修复配置文件失败: {cf}")
 
-    print(f"  [OK] 修复完成")
+    print(f"      [OK] {agent_name} 修复完成")
+
+
+def _wait_for_exit():
+    """等待用户按键退出，非交互环境自动跳过"""
+    try:
+        # 检查是否是交互式终端
+        if sys.stdin.isatty():
+            input()
+        else:
+            # 非交互环境（如CI），等待几秒后自动退出
+            time.sleep(2)
+    except (EOFError, OSError):
+        time.sleep(2)
 
 
 def main():
-    """主函数"""
+    """主函数 - 全自动模式"""
     try:
         found = scan_all()
     except Exception as e:
@@ -277,24 +290,31 @@ def main():
 
     if not found:
         print("\n[OK] 未发现需要修复的Agent")
+        print("\n按任意键退出...")
+        _wait_for_exit()
         return
 
-    print(f"\n发现 {len(found)} 个Agent需要修复")
+    print(f"\n[!] 发现 {len(found)} 个Agent需要修复")
+    print("[!] 3秒后开始自动修复...")
+    
+    # 倒计时，给用户取消的机会
+    for i in range(3, 0, -1):
+        print(f"    {i}...")
+        time.sleep(1)
+    
+    print("\n" + "-" * 60)
+    print("开始自动修复...")
+    print("-" * 60)
 
-    try:
-        response = input("\n是否立即修复? (y/n): ").strip().lower()
-    except EOFError:
-        # 无终端环境（如CI），自动跳过修复
-        print("(非交互环境，跳过修复)")
-        return
+    for agent_id, path, _ in found:
+        fix_agent(agent_id, path)
 
-    if response == 'y':
-        for agent_id, path, _ in found:
-            fix_agent(agent_id, path)
-        print("\n" + "=" * 60)
-        print("[OK] 所有修复已完成！")
-        print(f"备份保存在: {Path.home() / '.ai_agent_backups'}")
-        print("=" * 60)
+    print("\n" + "=" * 60)
+    print("[OK] 所有修复已完成！")
+    print(f"备份保存在: {Path.home() / '.ai_agent_backups'}")
+    print("=" * 60)
+    print("\n按任意键退出...")
+    _wait_for_exit()
 
 
 if __name__ == "__main__":
