@@ -49,17 +49,14 @@ class TestAgentDetection(TestCase):
 
     def test_find_agent_not_exists(self):
         """测试查找不存在的Agent"""
-        # 临时修改配置指向不存在的路径
         result = find_agent('nonexistent_agent')
         self.assertIsNone(result)
 
     def test_find_agent_mock(self):
         """测试查找Agent - 模拟"""
-        # 创建一个模拟的Agent目录
         mock_agent_dir = Path(self.test_dir) / 'mock_agent'
         mock_agent_dir.mkdir()
         
-        # 临时修改配置
         original_paths = AGENT_PATHS.get('opencode', {}).get('paths', {}).get('linux', [])
         AGENT_PATHS['opencode']['paths']['linux'] = [str(mock_agent_dir)]
         
@@ -67,7 +64,6 @@ class TestAgentDetection(TestCase):
             result = find_agent('opencode')
             self.assertIsNotNone(result)
         finally:
-            # 恢复原始配置
             AGENT_PATHS['opencode']['paths']['linux'] = original_paths
 
 
@@ -107,7 +103,6 @@ class TestConfigCheck(TestCase):
         config_file.write_text('')
         
         issues = check_config(self.test_dir)
-        # 空文件应该会被检测为问题
         self.assertGreaterEqual(len(issues), 0)
 
 
@@ -137,14 +132,19 @@ class TestCacheCheck(TestCase):
         self.assertEqual(len(issues), 0)
 
     def test_check_cache_large_cache(self):
-        """测试缓存检查 - 大缓存（>500MB）"""
+        """测试缓存检查 - 大缓存（>500MB）- 使用模拟"""
         cache_dir = self.test_dir / 'cache'
         cache_dir.mkdir()
         
-        # 创建一个大文件（600MB）
-        test_file = cache_dir / 'large.cache'
-        # 使用稀疏文件模拟大文件
-        test_file.write_bytes(b'x' * (600 * 1024 * 1024))
+        # 创建多个文件模拟大缓存，避免单个大文件占用内存
+        for i in range(10):
+            test_file = cache_dir / f'large_{i}.cache'
+            # 每个文件约60MB，总共约600MB
+            with open(test_file, 'wb') as f:
+                # 使用分块写入避免内存问题
+                chunk = b'x' * (1024 * 1024)  # 1MB chunk
+                for _ in range(60):
+                    f.write(chunk)
         
         issues = check_cache(self.test_dir)
         self.assertEqual(len(issues), 1)
@@ -161,7 +161,6 @@ class TestIntegration(TestCase):
 
     def test_full_workflow(self):
         """测试完整工作流程"""
-        # 创建模拟的Agent目录结构
         agent_dir = self.test_dir / 'test_agent'
         agent_dir.mkdir()
         
