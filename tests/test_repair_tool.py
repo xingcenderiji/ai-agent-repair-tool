@@ -198,9 +198,11 @@ class TestCheckCache(TestCase):
         self.assertEqual(issues, [])
 
     def test_multiple_cache_dirs(self):
-        for name in ['cache', 'Cache', 'temp']:
+        # macOS 文件系统不区分大小写，cache 和 Cache 是同一个目录
+        names = ['cache', 'temp'] if IS_MAC else ['cache', 'Cache', 'temp']
+        for name in names:
             d = self.test_dir / name
-            d.mkdir()
+            d.mkdir(exist_ok=True)
             (d / 'file.txt').write_text('small')
         issues = check_cache(self.test_dir)
         self.assertEqual(issues, [])
