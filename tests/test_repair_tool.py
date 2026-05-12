@@ -134,13 +134,16 @@ class TestCheckConfig(TestCase):
     def test_yaml_file_not_readable(self):
         f = self.test_dir / 'config.yaml'
         f.write_text('key: value\n')
-        f.chmod(0o000)
-        try:
+        if not IS_WIN:
+            f.chmod(0o000)
+            try:
+                issues = check_config(self.test_dir)
+                self.assertIsInstance(issues, list)
+            finally:
+                f.chmod(0o644)
+        else:
             issues = check_config(self.test_dir)
-            # 应该报告权限问题或正常通过（取决于运行用户）
             self.assertIsInstance(issues, list)
-        finally:
-            f.chmod(0o644)
 
     def test_binary_file_as_json(self):
         (self.test_dir / 'settings.json').write_bytes(b'\x00\x01\x02\xff')
@@ -235,12 +238,16 @@ class TestCheckCache(TestCase):
         cache = self.test_dir / 'cache'
         cache.mkdir()
         (cache / 'file.txt').write_text('data')
-        cache.chmod(0o000)
-        try:
+        if not IS_WIN:
+            cache.chmod(0o000)
+            try:
+                issues = check_cache(self.test_dir)
+                self.assertIsInstance(issues, list)
+            finally:
+                cache.chmod(0o755)
+        else:
             issues = check_cache(self.test_dir)
             self.assertIsInstance(issues, list)
-        finally:
-            cache.chmod(0o755)
 
     def test_cache_with_zero_byte_files(self):
         cache = self.test_dir / 'cache'
@@ -362,7 +369,8 @@ class TestFixAgent(TestCase):
         cache.mkdir()
         f = cache / 'readonly.txt'
         f.write_text('data')
-        f.chmod(0o444)
+        if not IS_WIN:
+            f.chmod(0o444)
 
         # 不应崩溃
         try:
@@ -371,7 +379,8 @@ class TestFixAgent(TestCase):
             self.fail('fix_agent should not raise on readonly files')
         finally:
             try:
-                f.chmod(0o644)
+                if not IS_WIN:
+                    f.chmod(0o644)
             except FileNotFoundError:
                 pass  # 文件已被成功删除
 
