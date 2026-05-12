@@ -362,6 +362,7 @@ class TestFixAgent(TestCase):
         fix_agent('testagent', agent_dir)
         fix_agent('testagent', agent_dir)  # 第二次
 
+    @skipIf(IS_WIN, 'permission test not reliable on Windows')
     def test_fix_with_readonly_file(self):
         agent_dir = self.test_dir / 'testagent'
         agent_dir.mkdir()
@@ -369,8 +370,7 @@ class TestFixAgent(TestCase):
         cache.mkdir()
         f = cache / 'readonly.txt'
         f.write_text('data')
-        if not IS_WIN:
-            f.chmod(0o444)
+        f.chmod(0o444)
 
         # 不应崩溃
         try:
@@ -379,11 +379,11 @@ class TestFixAgent(TestCase):
             self.fail('fix_agent should not raise on readonly files')
         finally:
             try:
-                if not IS_WIN:
-                    f.chmod(0o644)
+                f.chmod(0o644)
             except FileNotFoundError:
                 pass  # 文件已被成功删除
 
+    @skipIf(IS_WIN, 'symlink test not reliable on Windows')
     def test_fix_with_symlink_in_cache(self):
         agent_dir = self.test_dir / 'testagent'
         agent_dir.mkdir()
