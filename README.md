@@ -38,7 +38,27 @@
 
 ## 快速开始
 
-### 方式一：可执行文件（推荐）
+### 方式一：一键安装（推荐，零基础）
+
+只需一条命令，自动安装所有依赖并启动：
+
+**Windows** (在 cmd 或 PowerShell 中运行)：
+```cmd
+powershell -Command "iwr https://raw.githubusercontent.com/xingcenderiji/ai-agent-repair-tool/main/install.bat -OutFile install.bat"; start install.bat
+```
+
+**macOS / Linux** (在终端中运行)：
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/xingcenderiji/ai-agent-repair-tool/main/install.sh)
+```
+
+安装脚本会自动：
+1. 检测并安装 Git 和 Python（如未安装）
+2. 下载项目到桌面
+3. 安装依赖
+4. 创建桌面快捷方式
+
+### 方式二：下载可执行文件
 
 1. 前往 [Releases](../../releases) 页面
 2. 下载对应平台的文件：
@@ -48,17 +68,12 @@
 3. **Windows**: 双击运行，自动打开浏览器界面
 4. **Mac/Linux**: 终端运行 `./AI-Agent-Repair`
 
-### 方式二：Python 脚本
+### 方式三：手动安装
 
 ```bash
 git clone https://github.com/xingcenderiji/ai-agent-repair-tool.git
 cd ai-agent-repair-tool
-
-# GUI 操控界面（推荐）
 python gui.py
-
-# 或命令行全自动模式
-python repair_tool.py
 ```
 
 ## 使用说明
