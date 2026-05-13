@@ -146,7 +146,8 @@ class TestOperationSandbox:
     """操作沙箱测试"""
 
     def setup_method(self):
-        self.temp_dir = Path(tempfile.mkdtemp())
+        self.temp_dir = Path.home() / ".test_repair_sandbox_temp"
+        self.temp_dir.mkdir(exist_ok=True)
 
     def teardown_method(self):
         import shutil
@@ -154,7 +155,7 @@ class TestOperationSandbox:
 
     def test_dry_mode_does_not_write(self):
         sandbox = OperationSandbox(dry_run=True)
-        test_file = Path.home() / ".test_repair_sandbox" / "test.json"
+        test_file = self.temp_dir / "test.json"
         success, msg = sandbox.safe_write(test_file, '{"test": true}')
         assert success
         assert not test_file.exists()
@@ -175,8 +176,8 @@ class TestOperationSandbox:
 
     def test_summary(self):
         sandbox = OperationSandbox(dry_run=True)
-        sandbox.safe_write(Path.home() / ".test_repair_ok" / "ok.json", "{}")
-        sandbox.safe_write(Path.home() / ".test_repair_bad" / "bad.exe", "x")
+        sandbox.safe_write(self.temp_dir / "ok.json", "{}")
+        sandbox.safe_write(self.temp_dir / "bad.exe", "x")
         summary = sandbox.get_summary()
         assert summary["blocked_operations"] == 1
         assert summary["dry_run"] is True
