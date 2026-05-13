@@ -29,6 +29,7 @@ from agent_registry import AGENT_PATHS
 from core.config_scanner import ConfigScanner, AgentConfigScan
 from core.env_detector import EnvironmentDetector, detect_environment
 from core.download_manager import DownloadManager, DownloadMode, download_manager
+from core.auto_installer import AutoInstaller, auto_installer
 
 
 # ============================================================
@@ -82,6 +83,8 @@ class RepairEngine:
         self.session.environment = self.env_detector.to_dict()
         # 初始化下载管理器
         self.download_manager = download_manager
+        # 初始化自动安装器
+        self.auto_installer = auto_installer
         # 记录环境日志
         if self.env_detector.is_virtual_environment():
             self.session.log.append(f"⚠️ 检测到虚拟环境: {self.env_detector.info.type_display}")
@@ -477,6 +480,28 @@ class RepairHandler(SimpleHTTPRequestHandler):
             item_id = params.get("id", [""])[0]
             result = engine.download_manager.start_download(item_id)
             self._json_response({"status": result.success, "result": asdict(result)})
+        elif parsed.path == "/api/auto-install/scan":
+            # 扫描下载目录
+            detected = engine.auto_installer.scan_downloads()
+            files = engine.auto_installer.get_detected_files()
+            self._json_response({"detected": [f.to_dict() for f in detected] if hasattr(detected[0], 'to_dict') else files, "total": len(files), "files": files})
+        elif parsed.path == "/api/auto-install/files":
+            # 获取所有检测到的文件
+            files = engine.auto_installer.get_detected_files()
+            self._json_response({"files": files})
+        elif parsed.path == "/api/auto-install/install":
+            from urllib.parse import parse_qs
+            params = parse_qs(parsed.query)
+            file_id = params.get("id", [""])[0]
+            success, message = engine.auto_installer.install_file(file_id)
+            status = engine.auto_installer.get_file_status(file_id)
+            self._json_response({"success": success, "message": message, "status": status})
+        elif parsed.path == "/api/auto-install/start-monitoring":
+            engine.auto_installer.start_monitoring()
+            self._json_response({"status": "monitoring_started"})
+        elif parsed.path == "/api/auto-install/stop-monitoring":
+            engine.auto_installer.stop_monitoring()
+            self._json_response({"status": "monitoring_stopped"})
         elif parsed.path == "/api/plan":
             state = engine.build_repair_plan()
             self._json_response(state)
@@ -841,6 +866,74 @@ PAGE_HTML = r"""<!DOCTYPE html>
   font-size: 11px;
   margin-top: 8px;
 }
+
+/* 自动安装样式 */
+.detected-files-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.detected-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: all 0.3s;
+}
+
+.detected-file:hover {
+  border-color: rgba(0,229,160,0.3);
+}
+
+.detected-file.detected { border-color: rgba(255,171,64,0.3); }
+.detected-file.ready { border-color: rgba(0,229,160,0.3); }
+.detected-file.installing { border-color: var(--accent); background: rgba(0,229,160,0.03); }
+.detected-file.success { border-color: rgba(105,240,174,0.3); }
+.detected-file.failed { border-color: rgba(255,82,82,0.3); }
+
+.file-icon { font-size: 24px; }
+.file-info { flex: 1; }
+.file-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.file-meta { font-size: 11px; color: var(--text3); }
+.file-target { font-size: 12px; color: var(--accent); margin-top: 4px; }
+
+.file-progress {
+  width: 100%;
+  height: 4px;
+  background: var(--bg);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.file-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width 0.3s;
+}
+
+.file-actions { display: flex; gap: 6px; }
+
+.file-log {
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--bg);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text2);
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.file-log-item { padding: 2px 0; }
+.file-log-item.error { color: var(--danger); }
+.file-log-item.success { color: var(--success); }
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -1323,6 +1416,19 @@ body::before {
     <span class="badge" id="systemInfo">检测中...</span>
   </div>
 
+  <!-- 自动安装区 - 检测下载目录 -->
+  <div id="autoInstallSection" class="card hidden">
+    <div class="card-title">📥 检测到的安装包</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">
+      自动检测下载目录中的安装包，发现新文件将自动提示安装。
+    </p>
+    <div id="detectedFiles" class="detected-files-list"></div>
+    <div class="actions">
+      <button class="btn btn-secondary btn-sm" onclick="scanDownloads()">🔍 重新扫描</button>
+      <button class="btn btn-secondary btn-sm" id="btnMonitor" onclick="toggleMonitoring()">▶️ 开启监控</button>
+    </div>
+  </div>
+
   <!-- 流程指示器 -->
   <div class="flow-indicator">
     <div style="text-align:center">
@@ -1678,7 +1784,97 @@ document.addEventListener('DOMContentLoaded', () => {
   modeRadios.forEach(radio => {
     radio.addEventListener('change', onDownloadModeChange);
   });
+  
+  // 初始化自动安装扫描
+  setTimeout(() => {
+    scanDownloads();
+    // 启动后台监控
+    api('/api/auto-install/start-monitoring');
+    // 每10秒刷新一次
+    setInterval(scanDownloads, 10000);
+  }, 1000);
 });
+
+// ============================================================
+// 自动安装功能
+// ============================================================
+let isMonitoring = false;
+
+async function scanDownloads() {
+  try {
+    const result = await api('/api/auto-install/scan');
+    if (result.files && result.files.length > 0) {
+      document.getElementById('autoInstallSection').classList.remove('hidden');
+      renderDetectedFiles(result.files);
+    }
+  } catch (e) {
+    console.log('扫描下载目录失败:', e);
+  }
+}
+
+function renderDetectedFiles(files) {
+  const container = document.getElementById('detectedFiles');
+  
+  container.innerHTML = files.map(file => `
+    <div class="detected-file ${file.status}" id="file-${file.id}">
+      <div class="file-icon">${file.icon}</div>
+      <div class="file-info">
+        <div class="file-name">${file.filename}</div>
+        <div class="file-meta">${file.size} · ${file.file_type}</div>
+        ${file.target_agent ? `<div class="file-target">🎯 目标: ${file.target_agent}</div>` : ''}
+        ${file.status === 'installing' ? `
+          <div class="file-progress">
+            <div class="file-progress-fill" style="width:${file.progress}%"></div>
+          </div>
+        ` : ''}
+        ${file.error ? `<div style="color:var(--danger);font-size:11px;margin-top:4px;">${file.error}</div>` : ''}
+      </div>
+      <div class="file-actions">
+        ${getFileActionButtons(file)}
+      </div>
+    </div>
+  `).join('');
+}
+
+function getFileActionButtons(file) {
+  if (file.status === 'success') {
+    return `<span class="agent-badge ok">✓ 已安装</span>`;
+  } else if (file.status === 'failed') {
+    return `<button class="btn btn-sm btn-danger" onclick="installFile('${file.id}')">重试</button>`;
+  } else if (file.status === 'installing') {
+    return `<span class="spinner"></span>`;
+  } else {
+    return `<button class="btn btn-sm btn-primary" onclick="installFile('${file.id}')">安装</button>`;
+  }
+}
+
+async function installFile(fileId) {
+  try {
+    const result = await api(`/api/auto-install/install?id=${fileId}`);
+    if (result.success) {
+      alert('安装成功！' + (result.message || ''));
+    } else {
+      alert('安装失败: ' + result.message);
+    }
+    // 刷新列表
+    scanDownloads();
+  } catch (e) {
+    alert('安装请求失败: ' + e.message);
+  }
+}
+
+async function toggleMonitoring() {
+  const btn = document.getElementById('btnMonitor');
+  if (isMonitoring) {
+    await api('/api/auto-install/stop-monitoring');
+    isMonitoring = false;
+    btn.textContent = '▶️ 开启监控';
+  } else {
+    await api('/api/auto-install/start-monitoring');
+    isMonitoring = true;
+    btn.textContent = '⏸️ 停止监控';
+  }
+}
 
 // ============================================================
 // 更新流程指示器
