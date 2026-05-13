@@ -40,11 +40,9 @@ jobs:
     - name: Build
       run: |
         pyinstaller --onefile --name ${{ matrix.artifact_name }} --noconsole gui.py
-        # Rename to platform-specific name for release
+        # Keep platform-specific names to avoid conflicts
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          mv dist/${{ matrix.artifact_name }}.exe dist/${{ matrix.file_name }}
-        else
-          mv dist/${{ matrix.artifact_name }} dist/${{ matrix.file_name }}
+          mv dist/${{ matrix.artifact_name }}.exe dist/${{ matrix.artifact_name }}.exe
         fi
       shell: bash
 
@@ -52,7 +50,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact_name }}
-        path: dist/${{ matrix.file_name }}
+        path: dist/${{ matrix.artifact_name }}*
 
   release:
     needs: build
@@ -88,11 +86,12 @@ jobs:
           ### Usage
           1. Download the file for your platform
           2. Windows: Double-click `.exe`
-          3. Mac/Linux: `./AI-Agent-Repair` in terminal
-          4. Browser opens → Scan → Confirm → Repair
+          3. Mac: `./AI-Agent-Repair-macOS` in terminal
+          4. Linux: `./AI-Agent-Repair-Linux` in terminal
+          5. Browser opens → Scan → Confirm → Repair
 
           ### Supported Tools (11)
           Cursor, Windsurf, Cline, Continue, GitHub Copilot, Claude Code, OpenCode, Aider, Roo Code, Augment Code, Hermes-Agent
-        files: dist/**
+        files: dist/**/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
