@@ -2,29 +2,56 @@
   "agent_name": "Windsurf",
   "min_supported_version": "1.0.0",
   "config_files": [
-    "settings.json",
-    "config.json"
+    "User/settings.json",
+    "settings.json"
   ],
   "cache_dirs": [
-    "cache",
+    "CachedData",
     "Cache",
-    "temp",
-    "Temp"
+    "GPUCache",
+    "Code Cache"
   ],
   "log_files": [
     "*.log",
     "logs/*.log"
   ],
   "critical_files": [
-    "settings.json"
+    "User/settings.json"
+  ],
+  "state_files": [
+    "state.vscdb",
+    "User/globalStorage/storage.json"
   ],
   "default_config": {
     "version": "1.0.0",
     "settings": {}
   },
+  "common_issues": {
+    "session_state_out_of_sync": {
+      "symptom": "Session state not synchronized",
+      "cause": "state.vscdb corruption",
+      "fix": ["delete_state_vscdb", "restart"]
+    },
+    "code_completion_failed": {
+      "symptom": "Code completion not working",
+      "cause": "Index corruption",
+      "fix": ["invalidate_caches", "rebuild_index"]
+    },
+    "cascade_not_working": {
+      "symptom": "Cascade AI not responding",
+      "cause": "MCP configuration error",
+      "fix": ["validate_mcp_config", "restart"]
+    }
+  },
+  "quick_fix_shortcuts": {
+    "windows_linux": "Ctrl+Alt+F10",
+    "macos": "Cmd+Alt+F10"
+  },
   "repair_strategies": {
     "config_corrupted": "replace_with_default",
+    "state_db_corrupted": "delete_state_db",
     "cache_oversized": "clean_all",
+    "index_corrupted": "invalidate_caches",
     "permission_denied": "skip_and_report"
   }
 }

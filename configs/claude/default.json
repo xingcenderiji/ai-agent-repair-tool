@@ -3,28 +3,60 @@
   "min_supported_version": "1.0.0",
   "config_files": [
     "settings.json",
-    "config.json",
-    "claude.json"
+    ".claude.json",
+    ".mcp.json",
+    "config.json"
   ],
   "cache_dirs": [
     "cache",
-    "Cache",
-    "temp",
-    "Temp"
+    ".cache",
+    "temp"
   ],
   "log_files": [
     "*.log",
     "logs/*.log"
   ],
   "critical_files": [
-    "settings.json"
+    "settings.json",
+    ".mcp.json"
+  ],
+  "env_vars": [
+    "ANTHROPIC_API_KEY"
   ],
   "default_config": {
     "version": "1.0.0",
-    "settings": {}
+    "model": "claude-sonnet-4",
+    "settings": {
+      "allowedTools": [],
+      "mcpServers": {}
+    }
   },
+  "common_issues": {
+    "api_key_invalid": {
+      "symptom": "API key invalid or not set",
+      "cause": "ANTHROPIC_API_KEY not configured",
+      "fix": ["check_env_var", "set_api_key"]
+    },
+    "config_load_failed": {
+      "symptom": "Configuration loading failed",
+      "cause": "JSON syntax error in settings.json",
+      "fix": ["validate_json", "repair_config"]
+    },
+    "mcp_connection_failed": {
+      "symptom": "Cannot connect to MCP server",
+      "cause": "Invalid .mcp.json configuration",
+      "fix": ["validate_mcp_json", "check_paths"]
+    }
+  },
+  "diagnostic_commands": [
+    "claude config list",
+    "claude config get model",
+    "claude config get mcpServers"
+  ],
   "repair_strategies": {
     "config_corrupted": "replace_with_default",
+    "api_key_missing": "prompt_set_env",
+    "mcp_invalid": "validate_and_repair",
     "cache_oversized": "clean_all",
     "permission_denied": "skip_and_report"
   }

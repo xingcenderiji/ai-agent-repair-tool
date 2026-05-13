@@ -2,29 +2,59 @@
   "agent_name": "Aider",
   "min_supported_version": "1.0.0",
   "config_files": [
+    ".aider.conf.yml",
     "settings.json",
-    "config.json",
-    "aider.json"
+    "config.json"
   ],
   "cache_dirs": [
     "cache",
-    "Cache",
-    "temp",
-    "Temp"
+    ".cache",
+    "temp"
   ],
   "log_files": [
     "*.log",
-    "logs/*.log"
+    "aider.log"
   ],
   "critical_files": [
-    "settings.json"
+    ".aider.conf.yml"
   ],
+  "env_files": [
+    ".env"
+  ],
+  "env_vars": [
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "DEEPSEEK_API_KEY"
+  ],
+  "config_search_order": ["home", "git_root", "cwd"],
   "default_config": {
     "version": "1.0.0",
-    "settings": {}
+    "model": "claude-sonnet-4"
+  },
+  "config_example": {
+    "yaml": "model: claude-sonnet-4\napi-key: ${ANTHROPIC_API_KEY}"
+  },
+  "common_issues": {
+    "api_key_not_found": {
+      "symptom": "API key not found",
+      "cause": ".env file missing or not loaded",
+      "fix": ["create_env_file", "set_api_key_env"]
+    },
+    "config_load_failed": {
+      "symptom": "Configuration loading failed",
+      "cause": "YAML syntax error in .aider.conf.yml",
+      "fix": ["validate_yaml", "repair_config"]
+    },
+    "model_unavailable": {
+      "symptom": "Model not available",
+      "cause": "Invalid model name or API config",
+      "fix": ["validate_model_name", "check_api_config"]
+    }
   },
   "repair_strategies": {
     "config_corrupted": "replace_with_default",
+    "yaml_invalid": "validate_and_repair_yaml",
+    "env_missing": "create_env_template",
     "cache_oversized": "clean_all",
     "permission_denied": "skip_and_report"
   }
