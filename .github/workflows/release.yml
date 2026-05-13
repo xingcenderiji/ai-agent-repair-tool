@@ -12,24 +12,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-14
-            artifact_name: AI-Agent-Repair-macOS-ARM64
+          - os: macos-latest
+            artifact_name: AI-Agent-Repair-macOS
             file_name: AI-Agent-Repair
-            platform: "macOS Apple Silicon (M1/M2/M3)"
-          - os: macos-13
-            artifact_name: AI-Agent-Repair-macOS-x64
-            file_name: AI-Agent-Repair
-            platform: "macOS Intel"
           - os: windows-latest
-            artifact_name: AI-Agent-Repair-Windows-x64
+            artifact_name: AI-Agent-Repair-Windows
             file_name: AI-Agent-Repair.exe
-            platform: "Windows x64"
           - os: ubuntu-latest
-            artifact_name: AI-Agent-Repair-Linux-x64
+            artifact_name: AI-Agent-Repair-Linux
             file_name: AI-Agent-Repair
-            platform: "Linux x64"
       fail-fast: false
-      max-parallel: 2
 
     steps:
     - uses: actions/checkout@v4
@@ -78,10 +70,9 @@ jobs:
 
           | Platform | File |
           |----------|------|
-          | macOS Apple Silicon (M1/M2/M3) | `AI-Agent-Repair-macOS-ARM64` |
-          | macOS Intel | `AI-Agent-Repair-macOS-x64` |
-          | Windows x64 | `AI-Agent-Repair-Windows-x64.exe` |
-          | Linux x64 | `AI-Agent-Repair-Linux-x64` |
+          | macOS (Universal) | `AI-Agent-Repair-macOS` |
+          | Windows | `AI-Agent-Repair-Windows.exe` |
+          | Linux | `AI-Agent-Repair-Linux` |
 
           ### Usage
           1. Download the file for your platform
