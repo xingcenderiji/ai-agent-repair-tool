@@ -162,13 +162,14 @@ class PathValidator:
             return False, "路径包含遍历符(..)"
 
         # 2. 检查符号链接指向
-        if path.is_symlink():
-            try:
+        try:
+            if path.is_symlink():
                 target = os.readlink(path)
                 if ".." in target:
                     return False, "符号链接包含遍历符"
-            except:
-                pass
+        except (OSError, FileNotFoundError, PermissionError):
+            # 路径不存在或无权限访问，跳过符号链接检查
+            pass
 
         # 3. 检查黑名单
         for blacklisted in self._blacklist_resolved:
