@@ -2,6 +2,7 @@
 """
 AI Agent 修复工具 - 桌面操控界面
 提供Web界面操控修复流程，引导式操作，确认每一步
+新增：配置扫描预览功能
 """
 
 import os
@@ -25,6 +26,7 @@ if sys.platform == 'win32':
     os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
 
 from agent_registry import AGENT_PATHS
+from core.config_scanner import ConfigScanner, AgentConfigScan
 
 
 # ============================================================
@@ -40,6 +42,7 @@ class AgentStatus:
     installed: bool = False
     issues: List[str] = field(default_factory=list)
     status: str = "pending"  # pending, scanning, scanned, fixing, fixed, error
+    config_scan: Optional[Dict] = None  # 配置扫描结果
 
 @dataclass
 class RepairStep:
@@ -52,12 +55,14 @@ class RepairStep:
 
 @dataclass
 class SessionState:
-    current_phase: str = "idle"  # idle, scanning, review, confirming, fixing, done
+    current_phase: str = "idle"  # idle, scanning, preview, review, confirming, fixing, done
     agents: List[Dict] = field(default_factory=list)
     steps: List[Dict] = field(default_factory=list)
     current_step: int = 0
     log: List[str] = field(default_factory=list)
     summary: Dict = field(default_factory=dict)
+    config_scan_results: Dict[str, Dict] = field(default_factory=dict)  # 配置扫描结果
+    scan_report_path: Optional[str] = None  # 扫描报告路径
 
 
 # ============================================================
@@ -68,6 +73,7 @@ class RepairEngine:
     def __init__(self):
         self.session = SessionState()
         self._lock = threading.Lock()
+        self.config_scanner = ConfigScanner()
 
     def get_os(self):
         system = platform.system().lower()
@@ -133,11 +139,8 @@ class RepairEngine:
                     issues.append(f"缓存目录无访问权限: {cd}")
         return issues
 
-    def _remove_readonly(self, func, path, excinfo):
-        os.chmod(path, stat.S_IWRITE)
-        func(path)
-
     def scan_all(self):
+        """扫描所有Agent（健康检查）"""
         self.session.current_phase = "scanning"
         self.session.agents = []
         self.session.log = []
@@ -170,9 +173,63 @@ class RepairEngine:
 
             self.session.agents.append(asdict(status))
 
-        has_issues = any(a["issues"] for a in self.session.agents)
-        self.session.current_phase = "review" if has_issues else "done"
+        has_issues = any(a["issues"] for a in self.session.agents if a["installed"])
+        # 扫描完成后进入preview阶段（配置预览）
+        self.session.current_phase = "preview" if has_issues else "done"
         return asdict(self.session)
+
+    def scan_config_details(self):
+        """详细扫描配置信息"""
+        self.session.log.append("\n开始详细配置扫描...")
+        
+        # 使用ConfigScanner扫描所有Agent的详细配置
+        results = self.config_scanner.scan_all_agents(AGENT_PATHS)
+        
+        # 转换为字典存储
+        self.session.config_scan_results = {
+            agent_id: result.to_dict()
+            for agent_id, result in results.items()
+            if result.is_installed  # 只保存已安装的
+        }
+        
+        # 更新agents中的config_scan
+        for agent in self.session.agents:
+            if agent["agent_id"] in self.session.config_scan_results:
+                agent["config_scan"] = self.session.config_scan_results[agent["agent_id"]]
+        
+        # 统计信息
+        installed_count = len(self.session.config_scan_results)
+        total_plugins = sum(
+            r.get("total_plugins", 0) 
+            for r in self.session.config_scan_results.values()
+        )
+        total_mcp = sum(
+            len(r.get("mcp_servers", [])) 
+            for r in self.session.config_scan_results.values()
+        )
+        
+        self.session.log.append(f"  已扫描 {installed_count} 个Agent")
+        self.session.log.append(f"  发现 {total_plugins} 个插件")
+        self.session.log.append(f"  发现 {total_mcp} 个MCP服务器")
+        
+        return asdict(self.session)
+
+    def export_scan_report(self, format_type="json"):
+        """导出扫描报告"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        report_dir = Path.home() / ".ai_agent_repair" / "reports"
+        report_dir.mkdir(parents=True, exist_ok=True)
+        
+        if format_type == "json":
+            report_path = report_dir / f"config_scan_{timestamp}.json"
+            self.config_scanner.export_to_json(report_path)
+        else:
+            report_path = report_dir / f"config_scan_{timestamp}.md"
+            self.config_scanner.export_to_markdown(report_path)
+        
+        self.session.scan_report_path = str(report_path)
+        self.session.log.append(f"扫描报告已保存: {report_path}")
+        return str(report_path)
 
     def build_repair_plan(self):
         self.session.steps = []
@@ -332,6 +389,10 @@ class RepairEngine:
     def get_state(self):
         return asdict(self.session)
 
+    def _remove_readonly(self, func, path, excinfo):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
 
 # ============================================================
 # Web 服务器
@@ -359,6 +420,13 @@ class RepairHandler(SimpleHTTPRequestHandler):
         elif parsed.path == "/api/scan":
             threading.Thread(target=self._scan, daemon=True).start()
             self._json_response({"status": "scanning_started"})
+        elif parsed.path == "/api/scan-config":
+            threading.Thread(target=self._scan_config, daemon=True).start()
+            self._json_response({"status": "config_scan_started"})
+        elif parsed.path == "/api/export-report":
+            format_type = urllib.parse.parse_qs(parsed.query).get("format", ["json"])[0]
+            path = engine.export_scan_report(format_type)
+            self._json_response({"status": "exported", "path": path})
         elif parsed.path == "/api/plan":
             state = engine.build_repair_plan()
             self._json_response(state)
@@ -379,6 +447,9 @@ class RepairHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/scan":
             threading.Thread(target=self._scan, daemon=True).start()
             self._json_response({"status": "scanning_started"})
+        elif parsed.path == "/api/scan-config":
+            threading.Thread(target=self._scan_config, daemon=True).start()
+            self._json_response({"status": "config_scan_started"})
         elif parsed.path == "/api/execute-all":
             threading.Thread(target=self._execute_all, daemon=True).start()
             self._json_response({"status": "fixing_started"})
@@ -388,6 +459,10 @@ class RepairHandler(SimpleHTTPRequestHandler):
     def _scan(self):
         time.sleep(0.5)  # 模拟扫描延迟
         engine.scan_all()
+
+    def _scan_config(self):
+        time.sleep(0.3)
+        engine.scan_config_details()
 
     def _execute_all(self):
         engine.session.current_phase = "fixing"
@@ -540,7 +615,7 @@ body::before {
 }
 
 .flow-line {
-  width: 60px; height: 2px;
+  width: 40px; height: 2px;
   background: var(--border);
   transition: background 0.4s;
 }
@@ -590,6 +665,11 @@ body::before {
   border-radius: 10px;
   margin-bottom: 8px;
   transition: all 0.3s;
+  cursor: pointer;
+}
+
+.agent-item:hover {
+  border-color: rgba(0,229,160,0.3);
 }
 
 .agent-item.has-issues {
@@ -648,6 +728,51 @@ body::before {
   border-radius: 50%;
   background: var(--danger);
   flex-shrink: 0;
+}
+
+/* 配置预览 */
+.config-preview {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.config-section {
+  margin-bottom: 16px;
+}
+
+.config-section:last-child {
+  margin-bottom: 0;
+}
+
+.config-section-title {
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.config-item:last-child {
+  border-bottom: none;
+}
+
+.config-label {
+  color: var(--text2);
+}
+
+.config-value {
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
 }
 
 /* 修复步骤 */
@@ -765,6 +890,7 @@ body::before {
   justify-content: center;
   gap: 12px;
   margin-top: 24px;
+  flex-wrap: wrap;
 }
 
 /* 日志 */
@@ -805,6 +931,7 @@ body::before {
   justify-content: center;
   gap: 32px;
   margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
 .stat-item { text-align: center; }
@@ -850,7 +977,7 @@ body::before {
 @media (max-width: 640px) {
   .container { padding: 20px 16px; }
   .header h1 { font-size: 22px; }
-  .flow-line { width: 30px; }
+  .flow-line { width: 25px; }
   .summary-stats { gap: 20px; }
 }
 </style>
@@ -872,29 +999,34 @@ body::before {
     <div class="flow-line" id="fline1"></div>
     <div style="text-align:center">
       <div class="flow-dot" id="fd2">2</div>
-      <div class="flow-label" id="fl2">审查</div>
+      <div class="flow-label" id="fl2">预览</div>
     </div>
     <div class="flow-line" id="fline2"></div>
     <div style="text-align:center">
       <div class="flow-dot" id="fd3">3</div>
-      <div class="flow-label" id="fl3">确认</div>
+      <div class="flow-label" id="fl3">审查</div>
     </div>
     <div class="flow-line" id="fline3"></div>
     <div style="text-align:center">
       <div class="flow-dot" id="fd4">4</div>
-      <div class="flow-label" id="fl4">修复</div>
+      <div class="flow-label" id="fl4">确认</div>
     </div>
     <div class="flow-line" id="fline4"></div>
     <div style="text-align:center">
       <div class="flow-dot" id="fd5">5</div>
-      <div class="flow-label" id="fl5">完成</div>
+      <div class="flow-label" id="fl5">修复</div>
+    </div>
+    <div class="flow-line" id="fline5"></div>
+    <div style="text-align:center">
+      <div class="flow-dot" id="fd6">6</div>
+      <div class="flow-label" id="fl6">完成</div>
     </div>
   </div>
 
   <!-- Phase 1: 扫描 -->
   <div id="phase-scan">
     <div class="card">
-      <div class="card-title">扫描 Agent 安装状态</div>
+      <div class="card-title">🔍 扫描 Agent 安装状态</div>
       <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">
         点击下方按钮开始扫描，工具将自动检测已安装的 AI 开发工具及其健康状态。
       </p>
@@ -906,43 +1038,63 @@ body::before {
     <div id="logPanel" class="log-panel hidden"></div>
   </div>
 
-  <!-- Phase 2: 审查 -->
+  <!-- Phase 2: 配置预览 -->
+  <div id="phase-preview" class="hidden">
+    <div class="card">
+      <div class="card-title">📋 配置信息预览</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">
+        正在读取各AI工具的详细配置信息，包括插件、服务器、技能等。
+      </p>
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="startScan()">重新扫描</button>
+        <button class="btn btn-primary" id="btnScanConfig" onclick="startConfigScan()">
+          <span class="spinner hidden" id="configSpinner"></span> 详细配置扫描
+        </button>
+      </div>
+    </div>
+    <div id="configPreview" class="hidden"></div>
+    <div id="previewLogPanel" class="log-panel hidden"></div>
+  </div>
+
+  <!-- Phase 3: 审查 -->
   <div id="phase-review" class="hidden">
     <div class="card">
-      <div class="card-title">扫描结果</div>
+      <div class="card-title">📊 扫描结果审查</div>
       <div id="reviewContent"></div>
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" onclick="startScan()">重新扫描</button>
+      <button class="btn btn-secondary" onclick="startScan()">返回扫描</button>
+      <button class="btn btn-secondary" onclick="exportReport('json')">导出JSON</button>
+      <button class="btn btn-secondary" onclick="exportReport('markdown')">导出Markdown</button>
       <button class="btn btn-primary" id="btnPlan" onclick="buildPlan()">查看修复方案</button>
     </div>
   </div>
 
-  <!-- Phase 3: 确认 -->
+  <!-- Phase 4: 确认 -->
   <div id="phase-confirm" class="hidden">
     <div class="card">
-      <div class="card-title">修复方案确认</div>
+      <div class="card-title">✅ 修复方案确认</div>
       <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">
-        以下是建议的修复步骤，请逐一确认后执行。修复前会自动创建备份。
+        以下是建议的修复步骤，请确认后执行。修复前会自动创建备份。
       </p>
       <div id="stepsList"></div>
     </div>
     <div class="actions">
-      <button class="btn btn-secondary" onclick="startScan()">返回扫描</button>
-      <button class="btn btn-primary" id="btnExecAll" onclick="executeAll()">全部执行</button>
+      <button class="btn btn-secondary" onclick="showReview()">返回审查</button>
+      <button class="btn btn-primary" id="btnExecAll" onclick="executeAll()">确认并执行修复</button>
     </div>
   </div>
 
-  <!-- Phase 4: 修复中 -->
+  <!-- Phase 5: 修复中 -->
   <div id="phase-fixing" class="hidden">
     <div class="card">
-      <div class="card-title">正在修复... <span class="spinner"></span></div>
+      <div class="card-title">🔧 正在修复... <span class="spinner"></span></div>
       <div id="fixSteps"></div>
     </div>
     <div id="fixLogPanel" class="log-panel"></div>
   </div>
 
-  <!-- Phase 5: 完成 -->
+  <!-- Phase 6: 完成 -->
   <div id="phase-done" class="hidden">
     <div class="card">
       <div class="summary">
@@ -963,6 +1115,7 @@ body::before {
 <script>
 const API = '';
 let pollTimer = null;
+let currentState = null;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -972,16 +1125,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 更新流程指示器
 function updateFlow(active) {
-  const phases = ['scan','review','confirm','fixing','done'];
+  const phases = ['scan','preview','review','confirm','fixing','done'];
   const idx = phases.indexOf(active);
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 6; i++) {
     const dot = document.getElementById('fd' + (i+1));
     const label = document.getElementById('fl' + (i+1));
     dot.className = 'flow-dot';
     label.className = 'flow-label';
     if (i < idx) { dot.classList.add('done'); label.classList.add('done'); }
     else if (i === idx) { dot.classList.add('active'); label.classList.add('active'); }
-    if (i < 4) {
+    if (i < 5) {
       const line = document.getElementById('fline' + (i+1));
       line.className = 'flow-line';
       if (i < idx) line.classList.add('done');
@@ -992,7 +1145,7 @@ function updateFlow(active) {
 
 // 显示阶段
 function showPhase(phase) {
-  ['scan','review','confirm','fixing','done'].forEach(p => {
+  ['scan','preview','review','confirm','fixing','done'].forEach(p => {
     document.getElementById('phase-' + p).classList.toggle('hidden', p !== phase);
   });
   updateFlow(phase);
@@ -1017,16 +1170,16 @@ async function startScan() {
   // 轮询状态
   pollTimer = setInterval(async () => {
     const state = await api('/api/state');
+    currentState = state;
     updateLog(state.log);
-    if (state.current_phase === 'review' || state.current_phase === 'done') {
+    if (state.current_phase === 'preview') {
       clearInterval(pollTimer);
       document.getElementById('btnScan').disabled = false;
       document.getElementById('btnScan').textContent = '重新扫描';
-      if (state.current_phase === 'done') {
-        showDone(state);
-      } else {
-        showReview(state);
-      }
+      showPreview(state);
+    } else if (state.current_phase === 'done') {
+      clearInterval(pollTimer);
+      showDone(state);
     }
   }, 500);
 }
@@ -1034,6 +1187,7 @@ async function startScan() {
 // 更新日志
 function updateLog(logs) {
   const panel = document.getElementById('logPanel');
+  if (!panel) return;
   panel.innerHTML = logs.map(l => {
     let cls = 'log-line';
     if (l.includes('✓') || l.includes('正常')) cls += ' success';
@@ -1044,7 +1198,148 @@ function updateLog(logs) {
   panel.scrollTop = panel.scrollHeight;
 }
 
-// 显示扫描结果
+// 显示配置预览阶段
+function showPreview(state) {
+  showPhase('preview');
+  document.getElementById('previewLogPanel').classList.remove('hidden');
+  updatePreviewLog(state.log);
+}
+
+// 开始详细配置扫描
+async function startConfigScan() {
+  document.getElementById('btnScanConfig').disabled = true;
+  document.getElementById('configSpinner').classList.remove('hidden');
+  
+  await api('/api/scan-config');
+  
+  // 轮询状态
+  pollTimer = setInterval(async () => {
+    const state = await api('/api/state');
+    currentState = state;
+    updatePreviewLog(state.log);
+    
+    // 检查是否已完成配置扫描
+    const lastLog = state.log[state.log.length - 1] || '';
+    if (lastLog.includes('个MCP服务器') || lastLog.includes('扫描报告')) {
+      clearInterval(pollTimer);
+      document.getElementById('btnScanConfig').disabled = false;
+      document.getElementById('configSpinner').classList.add('hidden');
+      showConfigDetails(state);
+    }
+  }, 400);
+}
+}
+
+function updatePreviewLog(logs) {
+  const panel = document.getElementById('previewLogPanel');
+  if (!panel) return;
+  panel.innerHTML = logs.map(l => {
+    let cls = 'log-line';
+    if (l.includes('✓')) cls += ' success';
+    else if (l.includes('✗')) cls += ' error';
+    else if (l.includes('发现')) cls += ' warning';
+    return `<div class="${cls}">${l}</div>`;
+  }).join('');
+  panel.scrollTop = panel.scrollHeight;
+}
+
+// 显示配置详情
+function showConfigDetails(state) {
+  const container = document.getElementById('configPreview');
+  container.classList.remove('hidden');
+  
+  let html = '<div class="card">';
+  html += '<div class="card-title">📋 详细配置信息</div>';
+  
+  const installedAgents = state.agents.filter(a => a.installed && a.config_scan);
+  
+  installedAgents.forEach(agent => {
+    const scan = agent.config_scan;
+    html += `<div class="agent-item" onclick="toggleConfigDetail('${agent.agent_id}')">`;
+    html += `<div class="agent-left">`;
+    html += `<div class="agent-icon">${agent.icon}</div>`;
+    html += `<div>`;
+    html += `<div class="agent-name">${agent.name}</div>`;
+    html += `<div class="agent-path">${scan.config_files ? scan.config_files.length : 0} 个配置文件`;
+    if (scan.total_plugins > 0) html += ` | ${scan.total_plugins} 个插件`;
+    if (scan.mcp_servers && scan.mcp_servers.length > 0) html += ` | ${scan.mcp_servers.length} 个MCP服务器`;
+    html += '</div>';
+    html += '</div></div>';
+    html += `<span class="agent-badge ok">查看详情</span>`;
+    html += '</div>';
+    
+    html += `<div id="config-detail-${agent.agent_id}" class="config-preview hidden">`;
+    
+    if (scan.config_files && scan.config_files.length > 0) {
+      html += '<div class="config-section">';
+      html += '<div class="config-section-title">📄 配置文件</div>';
+      scan.config_files.forEach(cf => {
+        const status = cf.is_valid ? '✅' : '❌';
+        html += `<div class="config-item">`;
+        html += `<span class="config-label">${status} ${cf.filename}</span>`;
+        html += `<span class="config-value">${(cf.size_bytes / 1024).toFixed(1)} KB</span>`;
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    
+    if (scan.external_plugins && scan.external_plugins.length > 0) {
+      html += '<div class="config-section">';
+      html += `<div class="config-section-title">🔌 插件 (${scan.external_plugins.length}个)</div>`;
+      scan.external_plugins.slice(0, 5).forEach(plugin => {
+        html += `<div class="config-item">`;
+        html += `<span class="config-label">${plugin.name}</span>`;
+        html += `<span class="config-value">v${plugin.version || '?'}</span>`;
+        html += '</div>';
+      });
+      if (scan.external_plugins.length > 5) {
+        html += `<div style="color:var(--text3);font-size:11px;margin-top:4px;">...还有 ${scan.external_plugins.length - 5} 个插件</div>`;
+      }
+      html += '</div>';
+    }
+    
+    if (scan.mcp_servers && scan.mcp_servers.length > 0) {
+      html += '<div class="config-section">';
+      html += `<div class="config-section-title">🌐 MCP服务器 (${scan.mcp_servers.length}个)</div>`;
+      scan.mcp_servers.forEach(server => {
+        const enabled = server.enabled ? '✅' : '❌';
+        html += `<div class="config-item">`;
+        html += `<span class="config-label">${enabled} ${server.name}</span>`;
+        html += `<span class="config-value">${server.type}</span>`;
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    
+    if (scan.skills && scan.skills.length > 0) {
+      html += '<div class="config-section">';
+      html += `<div class="config-section-title">⚡ 技能/功能 (${scan.skills.length}个)</div>`;
+      scan.skills.slice(0, 5).forEach(skill => {
+        const enabled = skill.enabled ? '✅' : '❌';
+        html += `<div class="config-item">`;
+        html += `<span class="config-label">${enabled} ${skill.name}</span>`;
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    
+    html += '</div>';
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function toggleConfigDetail(agentId) {
+  const detail = document.getElementById(`config-detail-${agentId}`);
+  if (detail) detail.classList.toggle('hidden');
+}
+
+async function exportReport(format) {
+  const result = await api(`/api/export-report?format=${format}`);
+  alert(`报告已导出到:\n${result.path}`);
+}
+
 function showReview(state) {
   showPhase('review');
   const container = document.getElementById('reviewContent');
@@ -1057,16 +1352,15 @@ function showReview(state) {
       ? (hasIssues ? `<span class="agent-badge error">${a.issues.length} 个问题</span>` : `<span class="agent-badge ok">正常</span>`)
       : `<span class="agent-badge not-installed">未安装</span>`;
 
-    html += `<div class="agent-item ${cls}">
-      <div class="agent-left">
-        <div class="agent-icon">${a.icon}</div>
-        <div>
-          <div class="agent-name">${a.name}</div>
-          <div class="agent-path">${a.installed ? a.path : '未检测到'}</div>
-        </div>
-      </div>
-      ${badge}
-    </div>`;
+    html += `<div class="agent-item ${cls}">`;
+    html += `<div class="agent-left">`;
+    html += `<div class="agent-icon">${a.icon}</div>`;
+    html += `<div>`;
+    html += `<div class="agent-name">${a.name}</div>`;
+    html += `<div class="agent-path">${a.installed ? a.path : '未检测到'}</div>`;
+    html += `</div></div>`;
+    html += `${badge}`;
+    html += `</div>`;
 
     if (hasIssues) {
       html += '<div class="issue-list">';
@@ -1076,63 +1370,57 @@ function showReview(state) {
   });
 
   container.innerHTML = html;
-  updateLog(state.log);
-
+  
   const hasAnyIssues = state.agents.some(a => a.issues && a.issues.length > 0);
   document.getElementById('btnPlan').disabled = !hasAnyIssues;
 }
 
-// 构建修复方案
 async function buildPlan() {
   const state = await api('/api/plan');
+  currentState = state;
   showPhase('confirm');
 
   const container = document.getElementById('stepsList');
   let html = '';
 
   state.steps.forEach((s, i) => {
-    html += `<div class="step-item" id="step-${i}">
-      <div class="step-num">${i + 1}</div>
-      <div class="step-content">
-        <div class="step-name">${s.name}</div>
-        <div class="step-desc">${s.description}</div>
-        <div class="step-detail" id="step-detail-${i}"></div>
-      </div>
-    </div>`;
+    html += `<div class="step-item" id="step-${i}">`;
+    html += `<div class="step-num">${i + 1}</div>`;
+    html += `<div class="step-content">`;
+    html += `<div class="step-name">${s.name}</div>`;
+    html += `<div class="step-desc">${s.description}</div>`;
+    html += `<div class="step-detail" id="step-detail-${i}"></div>`;
+    html += `</div></div>`;
   });
 
   container.innerHTML = html;
 }
 
-// 全部执行
 async function executeAll() {
   showPhase('fixing');
   document.getElementById('fixLogPanel').innerHTML = '<div class="log-line">开始修复...</div>';
 
-  // 复制步骤到修复界面
-  const state = await api('/api/state');
+  const state = currentState;
   const fixSteps = document.getElementById('fixSteps');
   let html = '';
   state.steps.forEach((s, i) => {
-    html += `<div class="step-item" id="fix-step-${i}">
-      <div class="step-num">${i + 1}</div>
-      <div class="step-content">
-        <div class="step-name">${s.name}</div>
-        <div class="step-desc">${s.description}</div>
-        <div class="step-detail" id="fix-detail-${i}"></div>
-      </div>
-    </div>`;
+    html += `<div class="step-item" id="fix-step-${i}">`;
+    html += `<div class="step-num">${i + 1}</div>`;
+    html += `<div class="step-content">`;
+    html += `<div class="step-name">${s.name}</div>`;
+    html += `<div class="step-desc">${s.description}</div>`;
+    html += `<div class="step-detail" id="fix-detail-${i}"></div>`;
+    html += `</div></div>`;
   });
   fixSteps.innerHTML = html;
 
   await api('/api/execute-all');
 
-  // 轮询
   pollTimer = setInterval(async () => {
     const state = await api('/api/state');
+    currentState = state;
     updateFixLog(state.log);
 
-    // 更新步骤状态
     state.steps.forEach((s, i) => {
       const el = document.getElementById('fix-step-' + i);
       if (el) {
@@ -1161,7 +1449,6 @@ function updateFixLog(logs) {
   panel.scrollTop = panel.scrollHeight;
 }
 
-// 显示完成
 function showDone(state) {
   showPhase('done');
   const summary = state.summary || {};
@@ -1208,13 +1495,10 @@ function showDone(state) {
 </html>"""
 
 
-# ============================================================
-# 启动
-# ============================================================
-
 def find_free_port(start=8080, end=8100):
     for port in range(start, end):
         try:
+            import socket
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.bind(('127.0.0.1', port))
             s.close()
@@ -1223,7 +1507,6 @@ def find_free_port(start=8080, end=8100):
             continue
     return start
 
-import socket
 
 def main():
     port = find_free_port()
@@ -1238,7 +1521,6 @@ def main():
     print("=" * 60)
     print("正在打开浏览器...")
     
-    # 自动打开浏览器
     webbrowser.open(f'http://127.0.0.1:{port}')
     
     try:
