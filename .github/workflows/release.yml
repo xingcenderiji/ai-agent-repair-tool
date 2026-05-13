@@ -5,6 +5,11 @@ permissions:
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.2.0)'
+        required: true
+        default: 'v1.2.0'
   push:
     tags:
       - 'v*'
@@ -17,13 +22,10 @@ jobs:
         include:
           - os: macos-latest
             artifact_name: AI-Agent-Repair-macOS
-            file_name: AI-Agent-Repair
           - os: windows-latest
             artifact_name: AI-Agent-Repair-Windows
-            file_name: AI-Agent-Repair.exe
           - os: ubuntu-latest
             artifact_name: AI-Agent-Repair-Linux
-            file_name: AI-Agent-Repair
       fail-fast: false
 
     steps:
@@ -40,10 +42,6 @@ jobs:
     - name: Build
       run: |
         pyinstaller --onefile --name ${{ matrix.artifact_name }} --noconsole gui.py
-        # Keep platform-specific names to avoid conflicts
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          mv dist/${{ matrix.artifact_name }}.exe dist/${{ matrix.artifact_name }}.exe
-        fi
       shell: bash
 
     - name: Upload artifact
@@ -63,15 +61,25 @@ jobs:
       with:
         path: dist
 
-    - name: List artifacts
-      run: find dist -type f -name "*AI-Agent*" | sort
+    - name: List files
+      run: find dist -type f | sort
+
+    - name: Determine tag
+      id: tag
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+        fi
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        name: AI Agent Repair Tool ${{ github.ref_name }}
+        tag_name: ${{ steps.tag.outputs.tag }}
+        name: AI Agent Repair Tool ${{ steps.tag.outputs.tag }}
         body: |
-          ## AI Agent Repair Tool ${{ github.ref_name }}
+          ## AI Agent Repair Tool ${{ steps.tag.outputs.tag }}
 
           Automatically detect and repair AI development tools.
 
@@ -93,5 +101,7 @@ jobs:
           ### Supported Tools (11)
           Cursor, Windsurf, Cline, Continue, GitHub Copilot, Claude Code, OpenCode, Aider, Roo Code, Augment Code, Hermes-Agent
         files: dist/**/*
+        update_prerelease: false
+        remove_artifacts: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
