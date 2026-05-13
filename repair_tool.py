@@ -21,6 +21,10 @@ if sys.platform == 'win32':
     os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
 
 from agent_registry import AGENT_PATHS
+from core.audit_logger import get_audit_logger, OperationType, OperationStatus
+
+# 全局审计日志实例
+audit = get_audit_logger()
 
 
 class RepairResult:
@@ -146,11 +150,14 @@ def check_cache(agent_path: Path) -> List[str]:
 
 def scan_all() -> List[Tuple[str, Path, List[str]]]:
     """扫描所有Agent，返回 (agent_id, path, issues) 列表"""
+    # 开始审计会话
+    session_id = audit.start_session()
     print("=" * 60)
     print("AI Agent 智能修复工具 - 全自动模式")
     print("=" * 60)
     print(f"系统: {platform.system()} {platform.release()}")
     print(f"时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"会话ID: {session_id}")
     print("=" * 60)
 
     found_agents = []
@@ -170,8 +177,24 @@ def scan_all() -> List[Tuple[str, Path, List[str]]]:
                 for issue in issues:
                     print(f"    - {issue}")
                 found_agents.append((agent_id, path, issues))
+                # 记录发现问题
+                audit.log_operation(
+                    operation=OperationType.SCAN,
+                    agent_id=agent_id,
+                    target_path=path,
+                    status=OperationStatus.WARNING,
+                    details={"issues_found": len(issues), "issues": issues}
+                )
             else:
                 print(f"  状态: ✓ 正常")
+                # 记录正常扫描
+                audit.log_operation(
+                    operation=OperationType.SCAN,
+                    agent_id=agent_id,
+                    target_path=path,
+                    status=OperationStatus.SUCCESS,
+                    details={"issues_found": 0}
+                )
 
     return found_agents
 
@@ -186,11 +209,13 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
     """
     修复Agent，返回详细结果
     """
+    import time
     result = RepairResult(agent_id, agent_path)
     print(f"\n  >>> 正在自动修复 {result.agent_name}...")
 
     # 1. 备份
     print(f"      [1/3] 创建备份...")
+    backup_start = time.time()
     backup_dir = Path.home() / ".ai_agent_backups"
     backup_dir.mkdir(exist_ok=True)
     backup_name = f"{agent_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -210,13 +235,39 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
         result.backup_created = True
         result.backup_path = backup_path
         print(f"          ✓ 备份已创建: {backup_path}")
+        # 记录成功备份
+        audit.log_operation(
+            operation=OperationType.BACKUP,
+            agent_id=agent_id,
+            target_path=backup_path,
+            status=OperationStatus.SUCCESS,
+            details={"backup_name": backup_name, "source": str(agent_path)},
+            duration_ms=int((time.time() - backup_start) * 1000)
+        )
     except PermissionError as e:
         result.add_error(f"备份失败(权限不足): {e}")
+        audit.log_operation(
+            operation=OperationType.BACKUP,
+            agent_id=agent_id,
+            target_path=backup_path,
+            status=OperationStatus.FAILED,
+            error_message=str(e),
+            details={"error_type": "PermissionError"}
+        )
     except OSError as e:
         result.add_error(f"备份失败: {e}")
+        audit.log_operation(
+            operation=OperationType.BACKUP,
+            agent_id=agent_id,
+            target_path=backup_path,
+            status=OperationStatus.FAILED,
+            error_message=str(e),
+            details={"error_type": "OSError"}
+        )
 
     # 2. 清理缓存
     print(f"      [2/3] 清理缓存...")
+    cache_start = time.time()
     cache_dirs = ["cache", "Cache", "temp", "Temp", "CachedData"]
     cleaned = 0
     failed_caches = []
@@ -240,6 +291,19 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
                 result.add_warning(f"无法访问缓存目录: {cd}")
     
     result.cache_cleaned = cleaned
+    cache_status = OperationStatus.SUCCESS if not failed_caches else OperationStatus.WARNING
+    audit.log_operation(
+        operation=OperationType.CACHE_CLEAN,
+        agent_id=agent_id,
+        target_path=agent_path,
+        status=cache_status,
+        details={
+            "cleaned_dirs": cleaned,
+            "failed_items": len(failed_caches),
+            "cache_dirs": cache_dirs
+        },
+        duration_ms=int((time.time() - cache_start) * 1000)
+    )
     if cleaned > 0:
         print(f"          ✓ 已清理 {cleaned} 个缓存目录")
     if failed_caches:
@@ -247,6 +311,7 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
 
     # 3. 修复配置文件
     print(f"      [3/3] 修复配置文件...")
+    config_start = time.time()
     config_files = ["settings.json", "config.json"]
     fixed = 0
     failed_configs = []
@@ -276,6 +341,20 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
                 failed_configs.append(f"{cf}({e})")
     
     result.config_fixed = fixed
+    config_status = OperationStatus.SUCCESS if not failed_configs else OperationStatus.FAILED
+    audit.log_operation(
+        operation=OperationType.CONFIG_FIX,
+        agent_id=agent_id,
+        target_path=agent_path,
+        status=config_status,
+        details={
+            "fixed_files": fixed,
+            "failed_files": len(failed_configs),
+            "config_files": config_files
+        },
+        error_message="; ".join(failed_configs) if failed_configs else None,
+        duration_ms=int((time.time() - config_start) * 1000)
+    )
     if fixed > 0:
         print(f"          ✓ 已修复 {fixed} 个配置文件")
     if failed_configs:
@@ -370,10 +449,19 @@ def main():
         found = scan_all()
     except Exception as e:
         print(f"扫描出错: {e}")
+        import traceback
+        audit.log_operation(
+            operation=OperationType.SCAN,
+            status=OperationStatus.FAILED,
+            error_message=str(e),
+            stack_trace=traceback.format_exc()
+        )
+        audit.end_session({"error": str(e)})
         return
 
     if not found:
         print("\n[OK] 未发现需要修复的Agent")
+        audit.end_session({"agents_found": 0, "agents_repaired": 0})
         print("\n按任意键退出...")
         _wait_for_exit()
         return
@@ -389,6 +477,12 @@ def main():
             time.sleep(1)
     except KeyboardInterrupt:
         print("\n\n已取消修复")
+        audit.log_operation(
+            operation=OperationType.SCAN,
+            status=OperationStatus.SKIPPED,
+            details={"reason": "user_cancelled"}
+        )
+        audit.end_session({"cancelled": True})
         return
     
     print("\n" + "-" * 60)
@@ -407,13 +501,44 @@ def main():
             fully_fixed, remaining = verify_fix(path, issues)
             if fully_fixed:
                 print(f"          ✓ 所有问题已修复")
+                audit.log_operation(
+                    operation=OperationType.VALIDATION,
+                    agent_id=agent_id,
+                    target_path=path,
+                    status=OperationStatus.SUCCESS,
+                    details={"all_issues_fixed": True}
+                )
             else:
                 print(f"          ⚠ 仍有 {len(remaining)} 个问题未解决")
                 for issue in remaining:
                     print(f"            - {issue}")
+                audit.log_operation(
+                    operation=OperationType.VALIDATION,
+                    agent_id=agent_id,
+                    target_path=path,
+                    status=OperationStatus.WARNING,
+                    details={"all_issues_fixed": False, "remaining_issues": remaining}
+                )
     
     # 打印摘要
     print_summary(results)
+    
+    # 结束审计会话
+    summary = {
+        "agents_found": len(found),
+        "agents_repaired": len(results),
+        "successful_repairs": sum(1 for r in results if r.is_success()),
+        "total_errors": sum(len(r.errors) for r in results),
+        "total_warnings": sum(len(r.warnings) for r in results),
+        "backups_created": sum(1 for r in results if r.backup_created),
+        "caches_cleaned": sum(r.cache_cleaned for r in results),
+        "configs_fixed": sum(r.config_fixed for r in results)
+    }
+    audit.end_session(summary)
+    
+    # 显示审计日志位置
+    print(f"\n审计日志位置: {Path.home() / '.ai_agent_repair' / 'audit_logs'}")
+    print("=" * 60)
     
     print("\n按任意键退出...")
     _wait_for_exit()
