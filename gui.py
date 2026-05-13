@@ -27,6 +27,7 @@ if sys.platform == 'win32':
 
 from agent_registry import AGENT_PATHS
 from core.config_scanner import ConfigScanner, AgentConfigScan
+from core.env_detector import EnvironmentDetector, detect_environment
 
 
 # ============================================================
@@ -61,8 +62,9 @@ class SessionState:
     current_step: int = 0
     log: List[str] = field(default_factory=list)
     summary: Dict = field(default_factory=dict)
-    config_scan_results: Dict[str, Dict] = field(default_factory=dict)  # 配置扫描结果
-    scan_report_path: Optional[str] = None  # 扫描报告路径
+    config_scan_results: Dict[str, Dict] = field(default_factory=dict)
+    scan_report_path: Optional[str] = None
+    environment: Dict = field(default_factory=dict)  # 环境信息
 
 
 # ============================================================
@@ -74,6 +76,15 @@ class RepairEngine:
         self.session = SessionState()
         self._lock = threading.Lock()
         self.config_scanner = ConfigScanner()
+        # 初始化环境检测
+        self.env_detector = EnvironmentDetector()
+        self.session.environment = self.env_detector.to_dict()
+        # 记录环境日志
+        if self.env_detector.is_virtual_environment():
+            self.session.log.append(f"⚠️ 检测到虚拟环境: {self.env_detector.info.type_display}")
+            if self.env_detector.is_cross_environment():
+                self.session.log.append(f"  可访问主机文件系统: {', '.join(self.env_detector.info.host_mount_points)}")
+                self.session.log.append(f"  目标系统: {self.env_detector.info.target_system or '未知'}")
 
     def get_os(self):
         system = platform.system().lower()
@@ -95,7 +106,12 @@ class RepairEngine:
             try:
                 path = self.expand_path(path_template)
                 if path.exists():
-                    return path
+                    # 验证路径有效性
+                    valid, msg = self.env_detector.validate_agent_path(agent_id, str(path))
+                    if valid:
+                        return path
+                    else:
+                        self.session.log.append(f"  ⚠️ {config.get('name', agent_id)}: {msg}")
             except (OSError, ValueError):
                 continue
         return None
@@ -417,6 +433,8 @@ class RepairHandler(SimpleHTTPRequestHandler):
             self.wfile.write(PAGE_HTML.encode("utf-8"))
         elif parsed.path == "/api/state":
             self._json_response(engine.get_state())
+        elif parsed.path == "/api/environment":
+            self._json_response({"environment": engine.session.environment})
         elif parsed.path == "/api/scan":
             threading.Thread(target=self._scan, daemon=True).start()
             self._json_response({"status": "scanning_started"})
@@ -507,6 +525,60 @@ PAGE_HTML = r"""<!DOCTYPE html>
   --text2: #8888a8;
   --text3: #55556a;
   --radius: 12px;
+}
+
+/* 环境警告样式 */
+.env-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(255,171,64,0.1), rgba(255,82,82,0.05));
+  border: 1px solid rgba(255,171,64,0.3);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.env-warning-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.env-warning-content {
+  flex: 1;
+}
+
+.env-warning-title {
+  font-weight: 600;
+  color: var(--warning);
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.env-warning-desc {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+.env-warning-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.env-warning-close:hover {
+  color: var(--text);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -1118,10 +1190,42 @@ let pollTimer = null;
 let currentState = null;
 
 // 初始化
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const info = document.getElementById('systemInfo');
   info.textContent = `${navigator.platform} | ${new Date().toLocaleString('zh-CN')}`;
+  
+  // 获取环境信息
+  try {
+    const res = await fetch('/api/environment');
+    const data = await res.json();
+    const env = data.environment;
+    
+    // 更新badge显示环境
+    info.textContent = `${env.icon} ${env.type_display} | ${new Date().toLocaleString('zh-CN')}`;
+    
+    // 如果是虚拟环境，显示警告
+    if (env.is_virtual && env.environment_warning) {
+      showEnvironmentWarning(env);
+    }
+  } catch (e) {
+    console.log('环境检测失败:', e);
+  }
 });
+
+// 显示环境警告
+function showEnvironmentWarning(env) {
+  const warningHtml = `
+    <div class="env-warning" id="envWarning">
+      <div class="env-warning-icon">${env.icon}</div>
+      <div class="env-warning-content">
+        <div class="env-warning-title">${env.type_display}</div>
+        <div class="env-warning-desc">${env.environment_warning.replace(/\n/g, '<br>')}</div>
+      </div>
+      <button class="env-warning-close" onclick="document.getElementById('envWarning').remove()">×</button>
+    </div>
+  `;
+  document.querySelector('.container').insertAdjacentHTML('afterbegin', warningHtml);
+}
 
 // 更新流程指示器
 function updateFlow(active) {
