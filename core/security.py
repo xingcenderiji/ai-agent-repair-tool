@@ -37,6 +37,19 @@ SYSTEM_BLACKLIST = [
     "/var/log", "/var/run",
 ]
 
+# 敏感用户目录 - 禁止操作（即使在家目录下）
+SENSITIVE_USER_DIRS = [
+    "~/.ssh",           # SSH 密钥
+    "~/.gnupg",         # GPG 密钥
+    "~/.password-store", # pass 密码管理器
+    "~/.config/ssh",    # SSH 配置
+    "~/.kube",          # Kubernetes 凭证
+    "~/.docker",        # Docker 凭证
+    "~/.aws",           # AWS 凭证
+    "~/.config/gcloud", # GCP 凭证
+    "~/.azure",         # Azure 凭证
+]
+
 # 允许操作的目录前缀 - 白名单
 SAFE_PATH_PREFIXES = [
     # 用户主目录下的 AI 工具目录
@@ -108,7 +121,16 @@ class PathValidator:
 
     def _init_blacklist(self):
         """初始化黑名单（解析环境变量）"""
+        # 系统黑名单
         for path in SYSTEM_BLACKLIST:
+            try:
+                resolved = Path(os.path.expandvars(os.path.expanduser(path))).resolve()
+                self._blacklist_resolved.add(str(resolved))
+                self._blacklist_resolved.add(str(resolved).lower())
+            except:
+                pass
+        # 敏感用户目录
+        for path in SENSITIVE_USER_DIRS:
             try:
                 resolved = Path(os.path.expandvars(os.path.expanduser(path))).resolve()
                 self._blacklist_resolved.add(str(resolved))
