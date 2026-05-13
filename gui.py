@@ -28,6 +28,7 @@ if sys.platform == 'win32':
 from agent_registry import AGENT_PATHS
 from core.config_scanner import ConfigScanner, AgentConfigScan
 from core.env_detector import EnvironmentDetector, detect_environment
+from core.download_manager import DownloadManager, DownloadMode, download_manager
 
 
 # ============================================================
@@ -79,6 +80,8 @@ class RepairEngine:
         # 初始化环境检测
         self.env_detector = EnvironmentDetector()
         self.session.environment = self.env_detector.to_dict()
+        # 初始化下载管理器
+        self.download_manager = download_manager
         # 记录环境日志
         if self.env_detector.is_virtual_environment():
             self.session.log.append(f"⚠️ 检测到虚拟环境: {self.env_detector.info.type_display}")
@@ -445,6 +448,35 @@ class RepairHandler(SimpleHTTPRequestHandler):
             format_type = urllib.parse.parse_qs(parsed.query).get("format", ["json"])[0]
             path = engine.export_scan_report(format_type)
             self._json_response({"status": "exported", "path": path})
+        elif parsed.path == "/api/downloads/add":
+            # 添加下载项
+            from urllib.parse import parse_qs
+            params = parse_qs(parsed.query)
+            item_id = params.get("id", [""])[0]
+            name = params.get("name", [""])[0]
+            url = params.get("url", [""])[0]
+            size = int(params.get("size", ["0"])[0])
+            mode = params.get("mode", ["auto"])[0]
+            item = engine.download_manager.add_download(
+                item_id, name, url, size,
+                DownloadMode.AUTO if mode == "auto" else DownloadMode.LINK_ONLY
+            )
+            self._json_response({"status": "added", "item": engine.download_manager._item_to_dict(item)})
+        elif parsed.path == "/api/downloads/links":
+            # 获取所有下载链接
+            links = engine.download_manager.get_download_links()
+            markdown = engine.download_manager.get_all_links_markdown()
+            self._json_response({"links": links, "markdown": markdown})
+        elif parsed.path == "/api/downloads/status":
+            # 获取下载状态
+            status = engine.download_manager.get_status()
+            self._json_response({"downloads": status})
+        elif parsed.path == "/api/downloads/start":
+            from urllib.parse import parse_qs
+            params = parse_qs(parsed.query)
+            item_id = params.get("id", [""])[0]
+            result = engine.download_manager.start_download(item_id)
+            self._json_response({"status": result.success, "result": asdict(result)})
         elif parsed.path == "/api/plan":
             state = engine.build_repair_plan()
             self._json_response(state)
@@ -579,6 +611,235 @@ PAGE_HTML = r"""<!DOCTYPE html>
 
 .env-warning-close:hover {
   color: var(--text);
+}
+
+/* 模态框样式 */
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-close:hover { color: var(--text); }
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* 下载模式选择 */
+.download-mode-select {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mode-option {
+  cursor: pointer;
+}
+
+.mode-option input {
+  display: none;
+}
+
+.mode-content {
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.mode-option input:checked + .mode-content {
+  border-color: var(--accent);
+  background: rgba(0,229,160,0.05);
+}
+
+.mode-option:hover .mode-content {
+  border-color: rgba(0,229,160,0.3);
+}
+
+.mode-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.mode-desc {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* 下载项列表 */
+.download-items {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.download-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--bg2);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.download-item-icon {
+  font-size: 20px;
+}
+
+.download-item-info {
+  flex: 1;
+}
+
+.download-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.download-item-size {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.download-item-status {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.download-item-status.pending { background: rgba(85,85,106,0.2); color: var(--text2); }
+.download-item-status.downloading { background: rgba(0,229,160,0.1); color: var(--accent); }
+.download-item-status.success { background: rgba(105,240,174,0.1); color: var(--success); }
+.download-item-status.failed { background: rgba(255,82,82,0.1); color: var(--danger); }
+
+/* 下载进度条 */
+.download-progress {
+  margin-top: 16px;
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--bg2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 6px;
+}
+
+/* 下载链接显示 */
+.download-links {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.download-link-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.download-link-item:last-child { border-bottom: none; }
+
+.link-name {
+  flex: 1;
+  font-size: 13px;
+}
+
+.link-btn {
+  padding: 4px 12px;
+  font-size: 11px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  background: rgba(0,229,160,0.1);
+  color: var(--accent);
+}
+
+.link-btn:hover { background: rgba(0,229,160,0.2); }
+
+.link-url {
+  width: 100%;
+  padding: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  margin-top: 8px;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -1166,6 +1427,41 @@ body::before {
     <div id="fixLogPanel" class="log-panel"></div>
   </div>
 
+  <!-- 下载对话框 -->
+  <div id="downloadDialog" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">📥 下载文件</div>
+        <button class="modal-close" onclick="closeDownloadDialog()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="download-mode-select">
+          <label class="mode-option">
+            <input type="radio" name="downloadMode" value="auto" checked>
+            <div class="mode-content">
+              <div class="mode-title">🚀 自动下载</div>
+              <div class="mode-desc">工具自动下载，速度一般</div>
+            </div>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="downloadMode" value="link">
+            <div class="mode-content">
+              <div class="mode-title">🔗 获取链接</div>
+              <div class="mode-desc">复制链接，用IDM/ADM等加速</div>
+            </div>
+          </label>
+        </div>
+        <div id="downloadItems" class="download-items"></div>
+        <div id="downloadLinks" class="download-links hidden"></div>
+        <div id="downloadProgress" class="download-progress hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDownloadDialog()">取消</button>
+        <button class="btn btn-primary" id="btnDownloadAction" onclick="startDownloads()">开始下载</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Phase 6: 完成 -->
   <div id="phase-done" class="hidden">
     <div class="card">
@@ -1227,7 +1523,166 @@ function showEnvironmentWarning(env) {
   document.querySelector('.container').insertAdjacentHTML('afterbegin', warningHtml);
 }
 
+// ============================================================
+// 下载对话框
+// ============================================================
+let pendingDownloads = [];
+let currentDownloadMode = 'auto';
+
+function openDownloadDialog(items) {
+  pendingDownloads = items || [];
+  currentDownloadMode = 'auto';
+  
+  const dialog = document.getElementById('downloadDialog');
+  const itemsContainer = document.getElementById('downloadItems');
+  const linksContainer = document.getElementById('downloadLinks');
+  const progressContainer = document.getElementById('downloadProgress');
+  const btn = document.getElementById('btnDownloadAction');
+  
+  // 重置显示
+  itemsContainer.classList.remove('hidden');
+  linksContainer.classList.add('hidden');
+  progressContainer.classList.add('hidden');
+  btn.textContent = '开始下载';
+  
+  // 重置模式选择
+  document.querySelector('input[name="downloadMode"][value="auto"]').checked = true;
+  
+  // 显示下载项
+  if (pendingDownloads.length === 0) {
+    itemsContainer.innerHTML = '<p style="color:var(--text2);text-align:center;">没有待下载的文件</p>';
+  } else {
+    itemsContainer.innerHTML = pendingDownloads.map(item => `
+      <div class="download-item">
+        <div class="download-item-icon">📦</div>
+        <div class="download-item-info">
+          <div class="download-item-name">${item.name}</div>
+          <div class="download-item-size">${item.size || '未知大小'}</div>
+        </div>
+        <div class="download-item-status pending">待下载</div>
+      </div>
+    `).join('');
+  }
+  
+  dialog.classList.remove('hidden');
+}
+
+function closeDownloadDialog() {
+  document.getElementById('downloadDialog').classList.add('hidden');
+}
+
+function onDownloadModeChange() {
+  currentDownloadMode = document.querySelector('input[name="downloadMode"]:checked').value;
+  const itemsContainer = document.getElementById('downloadItems');
+  const linksContainer = document.getElementById('downloadLinks');
+  const btn = document.getElementById('btnDownloadAction');
+  
+  if (currentDownloadMode === 'link') {
+    // 显示链接模式
+    itemsContainer.classList.add('hidden');
+    linksContainer.classList.remove('hidden');
+    btn.textContent = '复制所有链接';
+    
+    // 获取链接
+    api('/api/downloads/links').then(data => {
+      if (data.links && data.links.length > 0) {
+        linksContainer.innerHTML = data.links.map(link => `
+          <div class="download-link-item">
+            <div class="link-name">${link.name}</div>
+            <button class="link-btn" onclick="copyLink('${link.url}')">复制</button>
+          </div>
+          <input class="link-url" type="text" value="${link.url}" readonly>
+        `).join('');
+      } else {
+        linksContainer.innerHTML = '<p style="color:var(--text2);text-align:center;">没有可下载的链接</p>';
+      }
+    });
+  } else {
+    // 自动下载模式
+    itemsContainer.classList.remove('hidden');
+    linksContainer.classList.add('hidden');
+    btn.textContent = '开始下载';
+  }
+}
+
+function copyLink(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    alert('链接已复制到剪贴板！');
+  });
+}
+
+async function startDownloads() {
+  if (currentDownloadMode === 'link') {
+    // 复制所有链接
+    const links = await api('/api/downloads/links');
+    if (links.links) {
+      const allUrls = links.links.map(l => l.url).join('\n');
+      navigator.clipboard.writeText(allUrls);
+      alert('所有链接已复制到剪贴板！\n\n可以使用IDM、ADM等工具批量下载。');
+    }
+    return;
+  }
+  
+  // 自动下载
+  const progressContainer = document.getElementById('downloadProgress');
+  const itemsContainer = document.getElementById('downloadItems');
+  const btn = document.getElementById('btnDownloadAction');
+  
+  progressContainer.classList.remove('hidden');
+  itemsContainer.classList.add('hidden');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 下载中...';
+  
+  // 显示进度条
+  progressContainer.innerHTML = `
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-text">
+      <span id="progressText">准备中...</span>
+      <span id="progressSpeed"></span>
+    </div>
+  `;
+  
+  // 逐个下载
+  let completed = 0;
+  let failed = 0;
+  
+  for (const item of pendingDownloads) {
+    const result = await api(`/api/downloads/start?id=${encodeURIComponent(item.id)}`);
+    if (result.status) {
+      completed++;
+    } else {
+      failed++;
+    }
+    
+    // 更新总体进度
+    const progress = ((completed + failed) / pendingDownloads.length) * 100;
+    document.getElementById('progressFill').style.width = progress + '%';
+    document.getElementById('progressText').textContent = 
+      `下载中 ${completed + failed}/${pendingDownloads.length}`;
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '完成';
+  
+  setTimeout(() => {
+    alert(`下载完成！\n成功: ${completed}\n失败: ${failed}`);
+    closeDownloadDialog();
+  }, 500);
+}
+
+// 监听模式切换
+document.addEventListener('DOMContentLoaded', () => {
+  const modeRadios = document.querySelectorAll('input[name="downloadMode"]');
+  modeRadios.forEach(radio => {
+    radio.addEventListener('change', onDownloadModeChange);
+  });
+});
+
+// ============================================================
 // 更新流程指示器
+// ============================================================
 function updateFlow(active) {
   const phases = ['scan','preview','review','confirm','fixing','done'];
   const idx = phases.indexOf(active);
