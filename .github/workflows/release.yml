@@ -7,93 +7,29 @@ on:
       - 'v*'
 
 jobs:
-  # ============================================
-  # macOS 构建 (Apple Silicon + Intel)
-  # ============================================
-  build-macos:
-    runs-on: ${{ matrix.runs-on }}
+  build:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          # Apple Silicon (M1/M2/M3) - macos-14 是 ARM 原生
-          - runs-on: macos-14
+          - os: macos-14
             artifact_name: AI-Agent-Repair-macOS-ARM64
             file_name: AI-Agent-Repair
-            arch: arm64
-          # Intel Mac - macos-13 是 Intel
-          - runs-on: macos-13
+            platform: "macOS Apple Silicon (M1/M2/M3)"
+          - os: macos-13
             artifact_name: AI-Agent-Repair-macOS-x64
             file_name: AI-Agent-Repair
-            arch: x64
-      fail-fast: false
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install dependencies
-      run: pip install pyinstaller
-
-    - name: Build
-      run: pyinstaller --onefile --name AI-Agent-Repair --noconsole gui.py
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.artifact_name }}
-        path: dist/${{ matrix.file_name }}
-
-  # ============================================
-  # Windows 构建 (x64)
-  # 注: windows-arm64-latest 仅 GitHub Team/Enterprise 可用
-  #     Windows ARM64 用户可通过 x64 版本兼容运行
-  # ============================================
-  build-windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        include:
-          - artifact_name: AI-Agent-Repair-Windows-x64
+            platform: "macOS Intel"
+          - os: windows-latest
+            artifact_name: AI-Agent-Repair-Windows-x64
             file_name: AI-Agent-Repair.exe
-      fail-fast: false
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install PyInstaller
-      run: pip install pyinstaller
-
-    - name: Build EXE
-      run: pyinstaller --onefile --name AI-Agent-Repair --noconsole gui.py
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.artifact_name }}
-        path: dist/${{ matrix.file_name }}
-
-  # ============================================
-  # Linux 构建 (x64)
-  # 注: ARM 交叉编译在 GitHub Actions 免费 runner 上
-  #     不可靠，改为仅构建 x64 原生版本
-  # ============================================
-  build-linux:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - artifact_name: AI-Agent-Repair-Linux-x64
+            platform: "Windows x64"
+          - os: ubuntu-latest
+            artifact_name: AI-Agent-Repair-Linux-x64
             file_name: AI-Agent-Repair
+            platform: "Linux x64"
       fail-fast: false
+      max-parallel: 2
 
     steps:
     - uses: actions/checkout@v4
@@ -115,11 +51,8 @@ jobs:
         name: ${{ matrix.artifact_name }}
         path: dist/${{ matrix.file_name }}
 
-  # ============================================
-  # 发布 Release
-  # ============================================
   release:
-    needs: [build-macos, build-windows, build-linux]
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -143,15 +76,12 @@ jobs:
 
           ### Downloads
 
-          | Platform | Architecture | File |
-          |----------|-------------|------|
-          | macOS | ARM64 (Apple Silicon M1/M2/M3) | `AI-Agent-Repair-macOS-ARM64` |
-          | macOS | x64 (Intel) | `AI-Agent-Repair-macOS-x64` |
-          | Windows | x64 (Intel/AMD) | `AI-Agent-Repair-Windows-x64.exe` |
-          | Linux | x86_64 (Intel/AMD) | `AI-Agent-Repair-Linux-x64` |
-
-          > **Note**: Windows ARM64 devices (Surface Pro X) can run the x64 build via emulation.
-          > Linux ARM devices (Raspberry Pi) can install via `pip` or run from source.
+          | Platform | File |
+          |----------|------|
+          | macOS Apple Silicon (M1/M2/M3) | `AI-Agent-Repair-macOS-ARM64` |
+          | macOS Intel | `AI-Agent-Repair-macOS-x64` |
+          | Windows x64 | `AI-Agent-Repair-Windows-x64.exe` |
+          | Linux x64 | `AI-Agent-Repair-Linux-x64` |
 
           ### Usage
           1. Download the file for your platform
