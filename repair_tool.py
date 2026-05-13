@@ -22,6 +22,7 @@ if sys.platform == 'win32':
 
 from agent_registry import AGENT_PATHS
 from core.audit_logger import get_audit_logger, OperationType, OperationStatus
+from core.i18n import _, set_language, get_language, get_available_languages
 
 # 全局审计日志实例
 audit = get_audit_logger()
@@ -153,11 +154,12 @@ def scan_all() -> List[Tuple[str, Path, List[str]]]:
     # 开始审计会话
     session_id = audit.start_session()
     print("=" * 60)
-    print("AI Agent 智能修复工具 - 全自动模式")
+    print(_("app_name") + " - " + _("app_description"))
     print("=" * 60)
-    print(f"系统: {platform.system()} {platform.release()}")
-    print(f"时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"会话ID: {session_id}")
+    print(f"{_('gui_language')}: {get_language().upper()}")
+    print(f"{platform.system()} {platform.release()}")
+    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Session ID: {session_id}")
     print("=" * 60)
 
     found_agents = []
@@ -166,14 +168,14 @@ def scan_all() -> List[Tuple[str, Path, List[str]]]:
         path = find_agent(agent_id)
         if path:
             print(f"\n[{config['name']}]")
-            print(f"  路径: {path}")
+            print(f"  Path: {path}")
 
             issues = []
             issues.extend(check_config(path))
             issues.extend(check_cache(path))
 
             if issues:
-                print(f"  状态: ! 发现问题 ({len(issues)}个)")
+                print(f"  Status: ! {_('scan_found_issues', count=len(issues))}")
                 for issue in issues:
                     print(f"    - {issue}")
                 found_agents.append((agent_id, path, issues))
@@ -186,7 +188,7 @@ def scan_all() -> List[Tuple[str, Path, List[str]]]:
                     details={"issues_found": len(issues), "issues": issues}
                 )
             else:
-                print(f"  状态: ✓ 正常")
+                print(f"  Status: ✓ {_('agent_status_healthy')}")
                 # 记录正常扫描
                 audit.log_operation(
                     operation=OperationType.SCAN,
@@ -211,10 +213,10 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
     """
     import time
     result = RepairResult(agent_id, agent_path)
-    print(f"\n  >>> 正在自动修复 {result.agent_name}...")
+    print(f"\n  >>> {_('repairing_agent', agent_name=result.agent_name)}")
 
     # 1. 备份
-    print(f"      [1/3] 创建备份...")
+    print(f"      {_('repair_step_backup')}")
     backup_start = time.time()
     backup_dir = Path.home() / ".ai_agent_backups"
     backup_dir.mkdir(exist_ok=True)
@@ -225,7 +227,7 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
         try:
             shutil.rmtree(backup_path)
         except Exception as e:
-            result.add_error(f"清理旧备份失败: {e}")
+            result.add_error(f"Failed to clean old backup: {e}")
 
     try:
         shutil.copytree(
@@ -234,7 +236,7 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
         )
         result.backup_created = True
         result.backup_path = backup_path
-        print(f"          ✓ 备份已创建: {backup_path}")
+        print(f"          ✓ {_('backup_created', path=backup_path)}")
         # 记录成功备份
         audit.log_operation(
             operation=OperationType.BACKUP,
@@ -245,7 +247,7 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
             duration_ms=int((time.time() - backup_start) * 1000)
         )
     except PermissionError as e:
-        result.add_error(f"备份失败(权限不足): {e}")
+        result.add_error(_('backup_failed', error=str(e)))
         audit.log_operation(
             operation=OperationType.BACKUP,
             agent_id=agent_id,
@@ -255,7 +257,7 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
             details={"error_type": "PermissionError"}
         )
     except OSError as e:
-        result.add_error(f"备份失败: {e}")
+        result.add_error(_('backup_failed', error=str(e)))
         audit.log_operation(
             operation=OperationType.BACKUP,
             agent_id=agent_id,
@@ -266,12 +268,12 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
         )
 
     # 2. 清理缓存
-    print(f"      [2/3] 清理缓存...")
+    print(f"      {_('repair_step_cache')}")
     cache_start = time.time()
     cache_dirs = ["cache", "Cache", "temp", "Temp", "CachedData"]
     cleaned = 0
     failed_caches = []
-    
+
     for cd in cache_dirs:
         cache_path = agent_path / cd
         if cache_path.exists():
@@ -288,7 +290,7 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
                         failed_caches.append(str(item))
                 cleaned += 1
             except PermissionError:
-                result.add_warning(f"无法访问缓存目录: {cd}")
+                result.add_warning(f"Cannot access cache directory: {cd}")
     
     result.cache_cleaned = cleaned
     cache_status = OperationStatus.SUCCESS if not failed_caches else OperationStatus.WARNING
