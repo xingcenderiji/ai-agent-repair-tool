@@ -156,6 +156,7 @@ def _load_remote_agents() -> dict:
     """
     从远程仓库加载社区贡献的新Agent配置
     返回额外的Agent字典
+    安全: 加载后进行安全验证，拒绝不安全配置
     """
     import json as _json
     import urllib.request
@@ -182,7 +183,33 @@ def _load_remote_agents() -> dict:
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
             if resp.status == 200:
-                extra_agents = _json.loads(resp.read().decode('utf-8'))
+                raw_data = _json.loads(resp.read().decode('utf-8'))
+
+                # === 安全验证 ===
+                try:
+                    from core.security import ConfigValidator
+                    validator = ConfigValidator()
+                    is_safe, issues = validator.validate_community_config(raw_data)
+                    if not is_safe:
+                        # 拒绝不安全配置，只保留安全的
+                        print(f"[安全警告] 社区配置中发现 {len(issues)} 个安全问题:")
+                        for issue in issues:
+                            print(f"  - {issue}")
+                        # 过滤掉不安全的agent
+                        safe_agents = {}
+                        for agent_id, agent_config in raw_data.items():
+                            if agent_id.startswith("_"):
+                                continue
+                            agent_safe, agent_issues = validator.validate_agent_config(agent_id, agent_config)
+                            if agent_safe:
+                                safe_agents[agent_id] = agent_config
+                        extra_agents = safe_agents
+                    else:
+                        extra_agents = raw_data
+                except ImportError:
+                    # 安全模块不可用时，只加载已知安全的配置
+                    extra_agents = {}
+
                 # 保存缓存
                 _CACHE_DIR.mkdir(parents=True, exist_ok=True)
                 with open(_CACHE_FILE, 'w', encoding='utf-8') as f:
