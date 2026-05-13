@@ -24,54 +24,7 @@ import urllib.parse
 if sys.platform == 'win32':
     os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
 
-# 支持的Agent及其常见安装路径
-AGENT_PATHS = {
-    "opencode": {
-        "name": "OpenCode",
-        "icon": "🟢",
-        "paths": {
-            "win": ["%USERPROFILE%/.opencode", "%APPDATA%/OpenCode"],
-            "mac": ["~/.opencode", "~/Library/Application Support/OpenCode"],
-            "linux": ["~/.opencode", "~/.config/opencode"]
-        }
-    },
-    "claude": {
-        "name": "Claude Code",
-        "icon": "🟠",
-        "paths": {
-            "win": ["%USERPROFILE%/.claude", "%APPDATA%/Claude"],
-            "mac": ["~/.claude", "~/Library/Application Support/Claude"],
-            "linux": ["~/.claude", "~/.config/claude"]
-        }
-    },
-    "cursor": {
-        "name": "Cursor",
-        "icon": "🔵",
-        "paths": {
-            "win": ["%APPDATA%/Cursor", "%USERPROFILE%/.cursor"],
-            "mac": ["~/Library/Application Support/Cursor", "~/.cursor"],
-            "linux": ["~/.config/Cursor", "~/.cursor"]
-        }
-    },
-    "windsurf": {
-        "name": "Windsurf",
-        "icon": "🟣",
-        "paths": {
-            "win": ["%APPDATA%/Windsurf", "%USERPROFILE%/.windsurf"],
-            "mac": ["~/Library/Application Support/Windsurf", "~/.windsurf"],
-            "linux": ["~/.config/Windsurf", "~/.windsurf"]
-        }
-    },
-    "hermes": {
-        "name": "Hermes-Agent",
-        "icon": "🟡",
-        "paths": {
-            "win": ["%USERPROFILE%/.hermes", "%APPDATA%/Hermes"],
-            "mac": ["~/.hermes", "~/Library/Application Support/Hermes"],
-            "linux": ["~/.hermes", "~/.config/hermes"]
-        }
-    }
-}
+from agent_registry import AGENT_PATHS
 
 
 # ============================================================

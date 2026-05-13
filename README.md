@@ -1,6 +1,6 @@
 # AI Agent Repair Tool
 
-全自动识别并修复 AI 开发工具（OpenCode、Claude Code、Cursor 等）的崩溃、配置损坏、数据丢失问题。
+全自动识别并修复 AI 开发工具的崩溃、配置损坏、数据丢失问题。
 
 ## 功能特性
 
@@ -9,17 +9,32 @@
 - 🛠️ **一键修复** - 配置文件修复、缓存清理、插件修复
 - 💾 **自动备份** - 修复前自动创建完整备份
 - 📊 **修复报告** - 详细的成功/失败/警告统计
-- 🖥️ **跨平台** - 支持 Windows、macOS、Linux
+- 🔄 **自动更新** - 自动获取社区贡献的新工具配置
+- 🌍 **跨平台** - 支持 Windows、macOS、Linux
+- 👥 **社区驱动** - 欢迎贡献新工具支持
 
-## 支持的 AI 工具
+## 支持的 AI 工具（11个）
 
+### IDE 插件类
 | 工具 | Windows | macOS | Linux |
 |------|---------|-------|-------|
-| OpenCode | ✅ | ✅ | ✅ |
-| Claude Code | ✅ | ✅ | ✅ |
 | Cursor | ✅ | ✅ | ✅ |
 | Windsurf | ✅ | ✅ | ✅ |
+| Cline | ✅ | ✅ | ✅ |
+| Continue | ✅ | ✅ | ✅ |
+| GitHub Copilot | ✅ | ✅ | ✅ |
+
+### 独立工具类
+| 工具 | Windows | macOS | Linux |
+|------|---------|-------|-------|
+| Claude Code | ✅ | ✅ | ✅ |
+| OpenCode | ✅ | ✅ | ✅ |
+| Aider | ✅ | ✅ | ✅ |
+| Roo Code | ✅ | ✅ | ✅ |
+| Augment Code | ✅ | ✅ | ✅ |
 | Hermes-Agent | ✅ | ✅ | ✅ |
+
+> 💡 通过社区贡献机制，支持的工具数量会持续增加
 
 ## 快速开始
 
@@ -36,22 +51,19 @@
 ### 方式二：Python 脚本
 
 ```bash
-# 克隆仓库
 git clone https://github.com/xingcenderiji/ai-agent-repair-tool.git
 cd ai-agent-repair-tool
 
-# 运行（GUI 操控界面）
+# GUI 操控界面（推荐）
 python gui.py
 
-# 或命令行模式
+# 或命令行全自动模式
 python repair_tool.py
 ```
 
 ## 使用说明
 
 ### GUI 操控界面（推荐）
-
-双击运行后自动打开浏览器，按以下流程操作：
 
 ```
 ① 扫描 → ② 审查 → ③ 确认 → ④ 修复 → ⑤ 完成
@@ -69,7 +81,7 @@ python repair_tool.py
 python repair_tool.py
 ```
 
-运行后自动扫描 → 3秒倒计时 → 自动修复 → 显示报告
+自动扫描 → 3秒倒计时 → 自动修复 → 显示报告
 
 ## 修复内容
 
@@ -81,21 +93,25 @@ python repair_tool.py
 
 ## 备份位置
 
-修复前会自动创建备份，保存在：
 - **Windows**: `%USERPROFILE%\.ai_agent_backups`
 - **macOS**: `~/.ai_agent_backups`
 - **Linux**: `~/.ai_agent_backups`
 
+## 贡献新工具
+
+欢迎为更多 AI 工具添加支持！请查看 [贡献指南](CONTRIBUTING.md)。
+
+快速步骤：
+1. 在 `agent_registry.py` 中注册新工具
+2. 在 `configs/` 下创建默认配置
+3. 添加测试用例
+4. 提交 Pull Request
+
 ## 开发
 
 ```bash
-# 安装依赖
 pip install -r requirements.txt
-
-# 运行测试
 python -m pytest tests/ -v
-
-# 打包成可执行文件
 pyinstaller --onefile --name AI-Agent-Repair --noconsole gui.py
 ```
 

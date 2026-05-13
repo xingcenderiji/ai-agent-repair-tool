@@ -2,7 +2,7 @@
 """
 AI Agent Repair Tool
 全自动识别并修复 AI 开发工具问题 - 无需用户干预
-支持: OpenCode, Claude Code, Cursor, Windsurf, Hermes-Agent
+支持: Cursor, Claude Code, OpenCode, Windsurf, Cline, Aider, Copilot, Continue, Roo Code, Augment Code, Hermes-Agent
 """
 
 import os
@@ -20,49 +20,7 @@ from typing import Dict, List, Tuple, Optional
 if sys.platform == 'win32':
     os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
 
-# 支持的Agent及其常见安装路径
-AGENT_PATHS = {
-    "opencode": {
-        "name": "OpenCode",
-        "paths": {
-            "win": ["%USERPROFILE%/.opencode", "%APPDATA%/OpenCode"],
-            "mac": ["~/.opencode", "~/Library/Application Support/OpenCode"],
-            "linux": ["~/.opencode", "~/.config/opencode"]
-        }
-    },
-    "claude": {
-        "name": "Claude Code",
-        "paths": {
-            "win": ["%USERPROFILE%/.claude", "%APPDATA%/Claude"],
-            "mac": ["~/.claude", "~/Library/Application Support/Claude"],
-            "linux": ["~/.claude", "~/.config/claude"]
-        }
-    },
-    "cursor": {
-        "name": "Cursor",
-        "paths": {
-            "win": ["%APPDATA%/Cursor", "%USERPROFILE%/.cursor"],
-            "mac": ["~/Library/Application Support/Cursor", "~/.cursor"],
-            "linux": ["~/.config/Cursor", "~/.cursor"]
-        }
-    },
-    "windsurf": {
-        "name": "Windsurf",
-        "paths": {
-            "win": ["%APPDATA%/Windsurf", "%USERPROFILE%/.windsurf"],
-            "mac": ["~/Library/Application Support/Windsurf", "~/.windsurf"],
-            "linux": ["~/.config/Windsurf", "~/.windsurf"]
-        }
-    },
-    "hermes": {
-        "name": "Hermes-Agent",
-        "paths": {
-            "win": ["%USERPROFILE%/.hermes", "%APPDATA%/Hermes"],
-            "mac": ["~/.hermes", "~/Library/Application Support/Hermes"],
-            "linux": ["~/.hermes", "~/.config/hermes"]
-        }
-    }
-}
+from agent_registry import AGENT_PATHS
 
 
 class RepairResult:
