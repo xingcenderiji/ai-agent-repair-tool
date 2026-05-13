@@ -7,21 +7,74 @@ on:
       - 'v*'
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  # ============================================
+  # macOS 构建 (Apple Silicon + Intel)
+  # ============================================
+  build-macos:
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            artifact_name: AI-Agent-Repair-Windows
+          # Apple Silicon (M1/M2/M3)
+          - runs-on: macos-14
+            artifact_name: AI-Agent-Repair-macOS-ARM64
+            file_name: AI-Agent-Repair
+            arch: arm64
+            desc: "macOS Apple Silicon (M1/M2/M3)"
+          # Intel Mac
+          - runs-on: macos-13
+            artifact_name: AI-Agent-Repair-macOS-x64
+            file_name: AI-Agent-Repair
+            arch: x86_64
+            desc: "macOS Intel"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: pip install pyinstaller
+
+    - name: Build EXE
+      run: |
+        if [ "${{ matrix.arch }}" = "arm64" ]; then
+          arch -arm64 pyinstaller --onefile --name AI-Agent-Repair-ARM64 --noconsole gui.py
+          mv dist/AI-Agent-Repair-ARM64 dist/AI-Agent-Repair
+        else
+          pyinstaller --onefile --name AI-Agent-Repair-x64 --noconsole gui.py
+          mv dist/AI-Agent-Repair-x64 dist/AI-Agent-Repair
+        fi
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: dist/${{ matrix.file_name }}
+
+  # ============================================
+  # Windows 构建 (x64 + ARM64)
+  # ============================================
+  build-windows:
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        include:
+          # Windows x64 (Intel/AMD)
+          - runs-on: windows-latest
+            artifact_name: AI-Agent-Repair-Windows-x64
             file_name: AI-Agent-Repair.exe
-          - os: macos-latest
-            artifact_name: AI-Agent-Repair-macOS
-            file_name: AI-Agent-Repair
-          - os: ubuntu-latest
-            artifact_name: AI-Agent-Repair-Linux
-            file_name: AI-Agent-Repair
-      fail-fast: false
+            arch: x64
+            desc: "Windows x64 (Intel/AMD)"
+          # Windows ARM64 (Surface Pro X, etc.)
+          - runs-on: windows-arm64-latest
+            artifact_name: AI-Agent-Repair-Windows-ARM64
+            file_name: AI-Agent-Repair.exe
+            arch: arm64
+            desc: "Windows ARM64"
 
     steps:
     - uses: actions/checkout@v4
@@ -34,8 +87,12 @@ jobs:
     - name: Install PyInstaller
       run: pip install pyinstaller
 
-    - name: Build EXE (GUI mode)
-      run: pyinstaller --onefile --name AI-Agent-Repair --noconsole gui.py
+    - name: Build EXE
+      run: |
+        $arch = "${{ matrix.arch }}"
+        $name = "AI-Agent-Repair-$arch"
+        pyinstaller --onefile --name $name --noconsole gui.py
+        Move-Item "dist/$name.exe" "dist/AI-Agent-Repair.exe" -Force
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -43,8 +100,69 @@ jobs:
         name: ${{ matrix.artifact_name }}
         path: dist/${{ matrix.file_name }}
 
+  # ============================================
+  # Linux 构建 (x64 + ARM64 + ARMv7)
+  # ============================================
+  build-linux:
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        include:
+          # Linux x64 (Intel/AMD)
+          - runs-on: ubuntu-latest
+            artifact_name: AI-Agent-Repair-Linux-x64
+            file_name: AI-Agent-Repair
+            arch: x86_64
+            desc: "Linux x64 (Intel/AMD)"
+          # Linux ARM64 (Raspberry Pi 4+, ARM servers)
+          - runs-on: ubuntu-latest
+            artifact_name: AI-Agent-Repair-Linux-ARM64
+            file_name: AI-Agent-Repair
+            arch: aarch64
+            desc: "Linux ARM64"
+          # Linux ARMv7 (Raspberry Pi 2/3)
+          - runs-on: ubuntu-latest
+            artifact_name: AI-Agent-Repair-Linux-ARMv7
+            file_name: AI-Agent-Repair
+            arch: armv7l
+            desc: "Linux ARMv7"
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install PyInstaller
+      run: pip install pyinstaller
+
+    - name: Build EXE
+      run: |
+        arch="${{ matrix.arch }}"
+        name="AI-Agent-Repair-${arch}"
+        if [ "$arch" = "aarch64" ]; then
+          # ARM64 需要交叉编译
+          pip install cross-arch-build 2>/dev/null || true
+          pip install --force-reinstall --no-cache-dir pyinstaller
+        elif [ "$arch" = "armv7l" ]; then
+          pip install --force-reinstall --no-cache-dir pyinstaller
+        fi
+        pyinstaller --onefile --name "$name" --noconsole gui.py
+        mv "dist/$name" dist/AI-Agent-Repair
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: dist/${{ matrix.file_name }}
+
+  # ============================================
+  # 发布 Release
+  # ============================================
   release:
-    needs: build
+    needs: [build-macos, build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -54,29 +172,50 @@ jobs:
       with:
         path: dist
 
+    - name: List artifacts
+      run: |
+        echo "Build artifacts:"
+        find dist -type f -name "*AI-Agent*" | sort
+
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v1.0.0
-        name: AI Agent Repair Tool v1.0.0
+        tag_name: v1.1.0
+        name: AI Agent Repair Tool v1.1.0
         body: |
-          ## AI Agent 智能修复工具 v1.0.0
+          ## AI Agent 智能修复工具 v1.1.0
 
           全自动识别并修复 AI 开发工具的崩溃、配置损坏、数据丢失问题。
 
-          ### 下载
-          - `AI-Agent-Repair.exe` - Windows 双击运行（自动打开浏览器界面）
-          - `AI-Agent-Repair-macOS` - macOS 运行
-          - `AI-Agent-Repair-Linux` - Linux 运行
+          ### 支持的芯片架构
+
+          #### macOS
+          | 架构 | 适用设备 | 下载 |
+          |------|---------|------|
+          | ARM64 (Apple Silicon) | MacBook Air/Pro M1/M2/M3 | `AI-Agent-Repair-macOS-ARM64` |
+          | x64 (Intel) | Mac Intel 系列 | `AI-Agent-Repair-macOS-x64` |
+
+          #### Windows
+          | 架构 | 适用设备 | 下载 |
+          |------|---------|------|
+          | x64 | Intel/AMD PC | `AI-Agent-Repair-Windows-x64.exe` |
+          | ARM64 | Surface Pro X | `AI-Agent-Repair-Windows-ARM64.exe` |
+
+          #### Linux
+          | 架构 | 适用设备 | 下载 |
+          |------|---------|------|
+          | x86_64 | Intel/AMD PC, 服务器 | `AI-Agent-Repair-Linux-x64` |
+          | ARM64 | Raspberry Pi 4+, ARM 服务器 | `AI-Agent-Repair-Linux-ARM64` |
+          | ARMv7 | Raspberry Pi 2/3 | `AI-Agent-Repair-Linux-ARMv7` |
 
           ### 使用方法
-          1. 下载对应平台的文件
-          2. Windows: 双击 `AI-Agent-Repair.exe`
+          1. 下载对应平台和架构的文件
+          2. Windows: 双击 `.exe` 文件
           3. Mac/Linux: 终端运行 `./AI-Agent-Repair`
           4. 自动打开浏览器 → 扫描 → 确认 → 修复
 
           ### 支持的工具
-          OpenCode, Claude Code, Cursor, Windsurf, Hermes-Agent
+          Cursor, Windsurf, Cline, Continue, Claude Code, OpenCode, Aider, Roo Code, Augment Code, GitHub Copilot, Hermes-Agent
         files: dist/**
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
