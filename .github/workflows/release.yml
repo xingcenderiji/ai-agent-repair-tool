@@ -38,7 +38,15 @@ jobs:
       run: pip install pyinstaller
 
     - name: Build
-      run: pyinstaller --onefile --name AI-Agent-Repair --noconsole gui.py
+      run: |
+        pyinstaller --onefile --name ${{ matrix.artifact_name }} --noconsole gui.py
+        # Rename to platform-specific name for release
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          mv dist/${{ matrix.artifact_name }}.exe dist/${{ matrix.file_name }}
+        else
+          mv dist/${{ matrix.artifact_name }} dist/${{ matrix.file_name }}
+        fi
+      shell: bash
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
