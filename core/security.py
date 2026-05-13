@@ -143,6 +143,13 @@ class PathValidator:
         验证路径是否安全
         返回: (是否安全, 原因)
         """
+        # 先展开 ~ 和环境变量
+        try:
+            expanded = os.path.expandvars(os.path.expanduser(str(path)))
+            path = Path(expanded)
+        except (OSError, ValueError) as e:
+            return False, f"路径展开失败: {e}"
+
         try:
             resolved = path.resolve()
             resolved_str = str(resolved)
