@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API 测试</title>
+<style>
+body { font-family: monospace; padding: 10px; background: #000; color: #0f0; }
+button { padding: 10px 20px; font-size: 16px; margin: 5px; }
+#log { white-space: pre-wrap; margin-top: 10px; border: 1px solid #333; padding: 10px; }
+.error { color: #f00; }
+.success { color: #0f0; }
+</style>
+</head>
+<body>
+<h2>API 测试页面</h2>
+<button onclick="testState()">1. 测试 /api/state</button>
+<button onclick="testScan()">2. 测试 /api/scan</button>
+<button onclick="testLinks()">3. 测试 /api/agent-links/claude</button>
+<div id="log">点击按钮测试...</div>
+
+<script>
+const API = '';
+function log(msg, isError) {
+  const el = document.getElementById('log');
+  const line = document.createElement('div');
+  line.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+  line.className = isError ? 'error' : 'success';
+  el.appendChild(line);
+}
+
+async function testState() {
+  log('测试 /api/state...');
+  try {
+    const res = await fetch('/api/state');
+    log('状态: ' + res.status);
+    const data = await res.json();
+    log('阶段: ' + data.current_phase);
+    log('工具数: ' + data.agents.length);
+  } catch(e) {
+    log('错误: ' + e.message, true);
+  }
+}
+
+async function testScan() {
+  log('测试 /api/scan (POST)...');
+  try {
+    const res = await fetch('/api/scan', { method: 'POST' });
+    log('状态: ' + res.status);
+    const data = await res.json();
+    log('响应: ' + JSON.stringify(data));
+  } catch(e) {
+    log('错误: ' + e.message, true);
+  }
+}
+
+async function testLinks() {
+  log('测试 /api/agent-links/claude...');
+  try {
+    const res = await fetch('/api/agent-links/claude');
+    log('状态: ' + res.status);
+    const data = await res.json();
+    log('官网: ' + data.website);
+  } catch(e) {
+    log('错误: ' + e.message, true);
+  }
+}
+</script>
+</body>
+</html>
