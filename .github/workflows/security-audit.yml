@@ -1,0 +1,191 @@
+name: Security Audit
+
+on:
+  schedule:
+    # 每周一凌晨 2:00 自动执行
+    - cron: '0 2 * * 1'
+  
+  workflow_dispatch:
+    inputs:
+      severity_threshold:
+        description: '漏洞严重度阈值 (critical/high/medium)'
+        required: false
+        default: 'medium'
+        type: choice
+        options:
+          - critical
+          - high
+          - medium
+      output_format:
+        description: '报告格式'
+        required: false
+        default: 'markdown'
+        type: choice
+        options:
+          - markdown
+          - json
+
+  push:
+    paths:
+      - '**.py'
+      - 'security_audit_tool.py'
+      - '.github/workflows/security-audit.yml'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+
+    - name: Run Security Audit
+      id: audit
+      run: |
+        echo "开始安全审计..."
+        
+        # 确定严重度阈值
+        SEVERITY_THRESHOLD="${{ inputs.severity_threshold || 'medium' }}"
+        echo "严重度阈值: $SEVERITY_THRESHOLD"
+        
+        # 确定输出格式
+        OUTPUT_FORMAT="${{ inputs.output_format || 'markdown' }}"
+        echo "输出格式: $OUTPUT_FORMAT"
+        
+        # 运行审计
+        if [ "$OUTPUT_FORMAT" = "json" ]; then
+          python security_audit_tool.py --output security_audit_report.json --format json
+        else
+          python security_audit_tool.py --output docs/SECURITY_AUDIT_REPORT.md --format markdown
+        fi
+        
+        # 检查是否有高危漏洞
+        if grep -q "高危\|HIGH\|严重\|CRITICAL" security_audit_report.json 2>/dev/null || \
+           grep -q "高危\|HIGH\|严重\|CRITICAL" docs/SECURITY_AUDIT_REPORT.md 2>/dev/null; then
+          echo "发现高危漏洞！"
+          echo "security_issue_found=true" >> $GITHUB_OUTPUT
+        else
+          echo "未发现高危漏洞"
+          echo "security_issue_found=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload Security Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-audit-report
+        path: |
+          docs/SECURITY_AUDIT_REPORT.md
+          security_audit_report.json
+        retention-days: 30
+
+    - name: Create Issue on High Severity Findings
+      if: steps.audit.outputs.security_issue_found == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 安全审计发现高危漏洞',
+            body: `## 安全审计报告\n\n自动安全审计发现了需要关注的问题。\n\n请查看完整报告：[Security Audit Report](./docs/SECURITY_AUDIT_REPORT.md)\n\n**建议**：\n1. 查看报告中的详细发现\n2. 按照修复建议更新代码\n3. 修复后重新运行审计验证`,
+            labels: ['security', 'bug']
+          })
+
+    - name: Create Pull Request for Fixes
+      if: steps.audit.outputs.security_issue_found == 'true' && github.event_name == 'schedule'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'fix(security): 修复安全审计发现的漏洞'
+        title: '🔒 安全修复：修复审计发现的漏洞'
+        body: |
+          ## 安全修复
+
+          自动安全审计发现了需要修复的问题。
+          
+          请查看审计报告：[Security Audit Report](./docs/SECURITY_AUDIT_REPORT.md)
+
+          ### 修复步骤
+          1. 查看审计报告中的详细发现
+          2. 按照建议的修复方案更新代码
+          3. 确保测试通过
+          4. 请求代码审查
+
+        branch: security-fix
+        delete-branch: true
+
+    - name: Send Slack Notification
+      if: steps.audit.outputs.security_issue_found == 'true' && env.SLACK_WEBHOOK != ''
+      uses: slackapi/slack-github-action@v1
+      with:
+        payload: |
+          {
+            "text": "🚨 *AI Agent Repair Tool* 安全审计发现高危漏洞",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*项目*: AI Agent Repair Tool\n*分支*: ${ { github.ref_name } }\n*审计时间*: ${ { github.event.head_commit.timestamp } }"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "<${ { github.server_url } }/${ { github.repository } }/actions|查看审计报告>"
+                }
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      continue-on-error: true
+
+  dependency-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run pip-audit
+      uses: trailofbits/pip-audit@v0
+      with:
+        requirements: requirements.txt
+        format: json
+        output: pip-audit-results.json
+        fail-on: medium
+
+    - name: Upload pip-audit results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: pip-audit-results
+        path: pip-audit-results.json
+        retention-days: 30
