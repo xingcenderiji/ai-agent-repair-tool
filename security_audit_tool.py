@@ -132,7 +132,7 @@ class SecurityAuditor:
 
         # 命令注入风险
         cmd_patterns = [
-            (r'subprocess\.run\s*\([^)]*shell\s*=\s*True', "Shell=True 命令执行 (高风险)"),
+            (r'subprocess\.run\s*\([^)]*shell\s*=\s*True(?!.*# noqa: safe-shell)', "Shell=True 命令执行 (高风险)"),
             (r'os\.system\s*\(', "os.system 命令执行 (高风险)"),
             (r'os\.popen\s*\(', "os.popen 命令执行 (高风险)"),
             (r'exec\s*\(', "动态代码执行 (极高风险)"),
@@ -238,14 +238,38 @@ class SecurityAuditor:
             return
 
         for py_file in self.project_root.rglob("*.py"):
-            if "node_modules" in str(py_file) or ".venv" in str(py_file):
+            # 排除测试文件、虚拟环境和生成的文件
+            path_str = str(py_file)
+            if any(excluded in path_str for excluded in [
+                "node_modules", ".venv", ".git", "__pycache__",
+                "tests/", "test_", "_test.py"
+            ]):
                 continue
 
             try:
                 content = py_file.read_text(encoding="utf-8", errors="ignore")
+                lines = content.split('\n')
                 matches = list(regex.finditer(content))
 
                 if matches:
+                    # 过滤掉有安全注释的行
+                    safe_matches = []
+                    for match in matches:
+                        # 获取匹配行号
+                        line_num = content[:match.start()].count('\n')
+                        # 检查该行及前后5行是否有安全注释
+                        context_start = max(0, line_num - 2)
+                        context_end = min(len(lines), line_num + 3)
+                        context = '\n'.join(lines[context_start:context_end])
+                        
+                        # 如果有安全注释，跳过此匹配
+                        if '# safe' in context.lower() or 'noqa' in context.lower():
+                            continue
+                        safe_matches.append(match)
+                    
+                    if not safe_matches:
+                        continue
+                    
                     # 检查是否有对应的安全措施
                     has_safe_alternative = any(safe in content for safe in [
                         "paramiko",

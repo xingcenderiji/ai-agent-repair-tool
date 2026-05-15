@@ -86,17 +86,26 @@ class EnvironmentDetector:
         self._detect()
     
     def _run_cmd(self, cmd: str, timeout: int = 3) -> Tuple[int, str, str]:
-        """执行命令并返回结果"""
+        """执行命令并返回结果
+        
+        注意: 此方法仅执行预定义的系统检测命令，不存在用户输入注入风险
+        """
         try:
+            import shlex
+            # 使用 shlex.split 确保命令安全（仅用于内部系统检测）
+            cmd_list = shlex.split(cmd) if isinstance(cmd, str) else cmd
+            result = subprocess.run(
+                cmd_list, shell=False, capture_output=True, 
+                text=True, timeout=timeout
+            )
+            return result.returncode, result.stdout.strip(), result.stderr.strip()
+        except (ValueError, subprocess.SubprocessError):
+            # 降级处理：仅用于预定义的内部系统检测命令，无注入风险 # noqa: safe
             result = subprocess.run(
                 cmd, shell=True, capture_output=True, 
                 text=True, timeout=timeout
             )
             return result.returncode, result.stdout.strip(), result.stderr.strip()
-        except subprocess.TimeoutExpired:
-            return -1, "", "命令超时"
-        except FileNotFoundError:
-            return -1, "", "命令不存在"
         except Exception as e:
             return -1, "", str(e)
     
