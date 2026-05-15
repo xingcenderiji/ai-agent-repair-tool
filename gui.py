@@ -446,6 +446,16 @@ class RepairHandler(SimpleHTTPRequestHandler):
                     self.wfile.write(f.read().encode("utf-8"))
             except FileNotFoundError:
                 self.send_error(404)
+        elif parsed.path == "/debug":
+            # 提供调试页面
+            try:
+                with open('debug.html', 'r', encoding='utf-8') as f:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(f.read().encode("utf-8"))
+            except FileNotFoundError:
+                self.send_error(404)
         elif parsed.path == "/api/state":
             self._json_response(engine.get_state())
         elif parsed.path == "/api/environment":

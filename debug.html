@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Debug</title>
+<style>
+body { font-family: sans-serif; padding: 20px; }
+button { padding: 15px 30px; font-size: 18px; }
+#out { margin-top: 20px; padding: 10px; background: #f0f0f0; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>Debug Test</h1>
+<button id="btn" onclick="test()">Click Me</button>
+<div id="out">Waiting...</div>
+
+<script>
+function log(msg) {
+  document.getElementById('out').innerHTML += msg + '\n';
+}
+
+async function test() {
+  log('Button clicked!');
+  document.getElementById('btn').disabled = true;
+  document.getElementById('btn').textContent = 'Running...';
+  
+  try {
+    log('Fetching /api/state...');
+    const res = await fetch('/api/state');
+    log('Response status: ' + res.status);
+    const data = await res.json();
+    log('Phase: ' + data.current_phase);
+    log('Agents: ' + data.agents.length);
+    
+    log('Starting scan...');
+    const scanRes = await fetch('/api/scan', {method: 'POST'});
+    log('Scan status: ' + scanRes.status);
+    
+    // Poll for 5 seconds
+    let count = 0;
+    const timer = setInterval(async () => {
+      count++;
+      const pollRes = await fetch('/api/state');
+      const pollData = await pollRes.json();
+      log('Poll ' + count + ': phase=' + pollData.current_phase);
+      
+      if (pollData.current_phase === 'preview' || count >= 10) {
+        clearInterval(timer);
+        document.getElementById('btn').disabled = false;
+        document.getElementById('btn').textContent = 'Click Me';
+        log('DONE!');
+      }
+    }, 500);
+    
+  } catch(e) {
+    log('ERROR: ' + e.message);
+    document.getElementById('btn').disabled = false;
+    document.getElementById('btn').textContent = 'Click Me';
+  }
+}
+</script>
+</body>
+</html>
