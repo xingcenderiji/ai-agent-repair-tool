@@ -292,8 +292,15 @@ class EnvironmentDetector:
         
         if self.info.type == EnvironmentType.TERMUX:
             termux_prefix = os.environ.get("PREFIX", "")
-            if termux_prefix and str(path_obj).startswith(termux_prefix.replace("\\", "/")):
+            home_dir = os.path.expanduser("~")
+            path_str = str(path_obj).replace("\\", "/")
+            # Termux 中允许访问：PREFIX 目录、用户主目录、/sdcard
+            if termux_prefix and path_str.startswith(termux_prefix.replace("\\", "/")):
                 return True, "Termux内部路径"
+            if path_str.startswith(home_dir.replace("\\", "/")):
+                return True, "Termux用户目录"
+            if path_str.startswith("/sdcard"):
+                return True, "Android存储目录"
         
         return True, "路径有效"
     

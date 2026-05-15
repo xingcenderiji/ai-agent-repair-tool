@@ -546,8 +546,15 @@ class RepairHandler(SimpleHTTPRequestHandler):
             self.send_error(404)
 
     def _scan(self):
-        time.sleep(0.5)  # 模拟扫描延迟
-        engine.scan_all()
+        try:
+            time.sleep(0.5)  # 模拟扫描延迟
+            engine.scan_all()
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] Scan failed: {e}")
+            traceback.print_exc()
+            engine.session.log.append(f"扫描失败: {str(e)}")
+            engine.session.current_phase = "preview"
 
     def _scan_config(self):
         time.sleep(0.3)
