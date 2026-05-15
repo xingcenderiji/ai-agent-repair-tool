@@ -436,6 +436,16 @@ class RepairHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(PAGE_HTML.encode("utf-8"))
+        elif parsed.path == "/test":
+            # 提供简化版测试页面
+            try:
+                with open('test_simple.html', 'r', encoding='utf-8') as f:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(f.read().encode("utf-8"))
+            except FileNotFoundError:
+                self.send_error(404)
         elif parsed.path == "/api/state":
             self._json_response(engine.get_state())
         elif parsed.path == "/api/environment":
