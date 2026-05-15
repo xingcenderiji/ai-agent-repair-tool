@@ -1,4 +1,9 @@
 # AI Agent Repair Tool Dependencies
+
+# 核心依赖
+pyyaml>=6.0
+urllib3>=2.0
+
 # 打包成可执行文件时需要:
 # pip install pyinstaller
 pyinstaller>=5.0
