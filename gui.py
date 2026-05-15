@@ -1942,8 +1942,10 @@ function showPhase(phase) {
 }
 
 // API 调用
-async function api(path) {
-  const res = await fetch(API + path);
+async function api(path, method = 'GET') {
+  const opts = { method };
+  if (method === 'POST') opts.headers = { 'Content-Type': 'application/json' };
+  const res = await fetch(API + path, opts);
   return res.json();
 }
 
@@ -1955,7 +1957,7 @@ async function startScan() {
   document.getElementById('logPanel').classList.remove('hidden');
   document.getElementById('logPanel').innerHTML = '<div class="log-line">开始扫描...</div>';
 
-  await api('/api/scan');
+  await api('/api/scan', 'POST');
 
   // 轮询状态
   pollTimer = setInterval(async () => {
@@ -2000,7 +2002,7 @@ async function startConfigScan() {
   document.getElementById('btnScanConfig').disabled = true;
   document.getElementById('configSpinner').classList.remove('hidden');
   
-  await api('/api/scan-config');
+  await api('/api/scan-config', 'POST');
   
   // 轮询状态
   pollTimer = setInterval(async () => {
@@ -2233,7 +2235,7 @@ async function executeAll() {
   });
   fixSteps.innerHTML = html;
 
-  await api('/api/execute-all');
+  await api('/api/execute-all', 'POST');
 
   pollTimer = setInterval(async () => {
     const state = await api('/api/state');
