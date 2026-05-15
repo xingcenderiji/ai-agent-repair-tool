@@ -557,8 +557,11 @@ class RepairHandler(SimpleHTTPRequestHandler):
 
     def _scan(self):
         try:
+            print("[DEBUG] Scan started")
             time.sleep(0.5)  # 模拟扫描延迟
-            engine.scan_all()
+            result = engine.scan_all()
+            print(f"[DEBUG] Scan completed, phase: {result.get('current_phase')}")
+            print(f"[DEBUG] Agents found: {len([a for a in result.get('agents', []) if a.get('installed')])}")
         except Exception as e:
             import traceback
             print(f"[ERROR] Scan failed: {e}")
