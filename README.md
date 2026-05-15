@@ -22,6 +22,7 @@
 - **Releases**: [Download executables](../../releases)
 - **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Technical Reference**: [docs/TECHNICAL_REFERENCE.md](docs/TECHNICAL_REFERENCE.md)
+- **Test Gap Analyzer**: [docs/TEST_GAP_ANALYZER.md](docs/TEST_GAP_ANALYZER.md)
 
 ## License
 

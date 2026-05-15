@@ -75,3 +75,30 @@ jobs:
       with:
         name: AI-Agent-Repair-${{ matrix.os }}
         path: dist/
+
+  test-gap-analysis:
+    name: Test Gap Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Run Test Gap Analyzer
+        run: |
+          python -m test_gap_analyzer.analyze --commits 10 --fail-on-high-risk
+        continue-on-error: false
+      
+      - name: Upload analysis report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-gap-analysis-report
+          path: tests/
