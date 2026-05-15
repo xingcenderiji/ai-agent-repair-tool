@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-05-15
+
 ### Added
-- 自动安装功能：监控下载目录，识别用户自行下载的安装包
-- 文件类型识别：支持 EXE/MSI/DMG/DEB/RPM/AppImage 等安装包
-- 文件名模式匹配，自动识别目标 Agent
-- 后台监控模式，每5秒扫描下载目录
+- 📦 自动安装功能：监控下载目录，识别用户自行下载的安装包
+  - 支持 EXE/MSI/DMG/DEB/RPM/AppImage 等多种安装包格式
+  - 智能文件名模式匹配，自动识别目标 Agent
+  - 后台监控模式，每5秒自动扫描下载目录
+  - 安装前自动备份现有版本
+
+### Changed
+- 优化下载管理器，支持与自动安装功能联动
+- 更新 GUI 界面，新增自动安装控制面板
+- 增强错误处理和用户提示
 
 ## [1.2.0] - 2026-05-13
 
@@ -76,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/xingcenderiji/ai-agent-repair-tool/releases/tag/v1.0.0
