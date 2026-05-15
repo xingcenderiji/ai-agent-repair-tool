@@ -1,0 +1,207 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "updated_at": "2026-05-15",
+    "description": "AI工具修复知识库 - 定期更新，包含常见问题、修复参考和版本更新信息",
+    "update_interval_hours": 24
+  },
+  "cursor": {
+    "latest_version": "0.45.0",
+    "known_issues": [
+      {
+        "id": "CUR-001",
+        "title": "启动崩溃 - settings.json 损坏",
+        "symptoms": ["Cursor 打开后立即闪退", "显示 'Unable to read settings'"],
+        "cause": "settings.json 包含无效 JSON 或非法字符",
+        "fix": "重置 settings.json 为默认配置",
+        "reference": "https://github.com/getcursor/cursor/issues"
+      },
+      {
+        "id": "CUR-002",
+        "title": "AI 补全不工作",
+        "symptoms": ["Tab 补全无响应", "Copilot++ 显示离线"],
+        "cause": "API 密钥过期或网络代理配置错误",
+        "fix": "检查 API 密钥状态，验证代理设置",
+        "reference": "https://docs.cursor.com/troubleshooting"
+      },
+      {
+        "id": "CUR-003",
+        "title": "扩展安装失败",
+        "symptoms": ["扩展市场无法加载", "安装扩展时报错 EACCES"],
+        "cause": "扩展目录权限问题或缓存损坏",
+        "fix": "清理扩展缓存目录，修复文件权限",
+        "reference": "https://github.com/getcursor/cursor/issues"
+      }
+    ]
+  },
+  "windsurf": {
+    "latest_version": "2.1.29",
+    "known_issues": [
+      {
+        "id": "WIN-001",
+        "title": "Cascade AI 无响应",
+        "symptoms": ["Cascade 面板无输出", "显示 'Connection timeout'"],
+        "cause": "Codeium 服务连接中断或 Token 过期",
+        "fix": "重新登录 Codeium 账户，检查网络连接",
+        "reference": "https://docs.windsurf.com/troubleshooting"
+      },
+      {
+        "id": "WIN-002",
+        "title": "配置文件同步失败",
+        "symptoms": ["设置在不同设备间不一致", "显示 'Sync failed'"],
+        "cause": "云同步服务异常或本地配置冲突",
+        "fix": "清除本地同步缓存，重新触发同步",
+        "reference": "https://github.com/codeiuminc/windsurf/issues"
+      }
+    ]
+  },
+  "cline": {
+    "latest_version": "3.15.0",
+    "known_issues": [
+      {
+        "id": "CLI-001",
+        "title": "MCP 服务器连接失败",
+        "symptoms": ["MCP 工具不可用", "显示 'MCP connection error'"],
+        "cause": "MCP 服务器配置错误或进程崩溃",
+        "fix": "检查 mcp.json 配置，重启 MCP 服务器",
+        "reference": "https://docs.cline.bot/mcp-troubleshooting"
+      },
+      {
+        "id": "CLI-002",
+        "title": "VSCode 全局存储损坏",
+        "symptoms": ["Cline 无法保存对话历史", "显示 'Storage error'"],
+        "cause": "globalStorage 目录权限问题",
+        "fix": "修复 vscode 全局存储目录权限",
+        "reference": "https://github.com/cline/cline/issues"
+      }
+    ]
+  },
+  "claude": {
+    "latest_version": "1.0.28",
+    "known_issues": [
+      {
+        "id": "CLD-001",
+        "title": "认证失败",
+        "symptoms": ["显示 'Authentication required'", "API 调用返回 401"],
+        "cause": "OAuth Token 过期或 API Key 无效",
+        "fix": "运行 claude auth login 重新认证",
+        "reference": "https://docs.anthropic.com/en/docs/claude-code/troubleshooting"
+      },
+      {
+        "id": "CLD-002",
+        "title": "项目配置 .claude 损坏",
+        "symptoms": ["Claude 忽略项目指令", "显示 'Invalid config'"],
+        "cause": "CLAUDE.md 或 .claude/settings.json 格式错误",
+        "fix": "验证并修复配置文件格式",
+        "reference": "https://github.com/anthropics/claude-code/issues"
+      }
+    ]
+  },
+  "aider": {
+    "latest_version": "0.82.0",
+    "known_issues": [
+      {
+        "id": "AID-001",
+        "title": "Git 仓库状态异常",
+        "symptoms": ["Aider 无法检测文件变更", "显示 'Git error'"],
+        "cause": ".git 目录损坏或 aider 忽略文件配置错误",
+        "fix": "运行 git fsck 修复仓库，检查 .aider.conf.yml",
+        "reference": "https://aider.chat/docs/troubleshooting"
+      },
+      {
+        "id": "AID-002",
+        "title": "模型配置丢失",
+        "symptoms": ["启动时提示模型不可用", "回退到默认模型"],
+        "cause": ".aider.conf.yml 或环境变量配置错误",
+        "fix": "重新配置 API 密钥和模型选择",
+        "reference": "https://github.com/paul-gauthier/aider/issues"
+      }
+    ]
+  },
+  "copilot": {
+    "latest_version": "3.0.0",
+    "known_issues": [
+      {
+        "id": "COP-001",
+        "title": "Copilot 服务断开",
+        "symptoms": ["内联建议消失", "状态栏显示 'Copilot: Disconnected'"],
+        "cause": "GitHub Copilot 服务中断或网络代理拦截",
+        "fix": "检查网络连接，验证 GitHub 登录状态",
+        "reference": "https://docs.github.com/en/copilot/troubleshooting"
+      },
+      {
+        "id": "COP-002",
+        "title": "Copilot Chat 无法启动",
+        "symptoms": ["Chat 面板空白", "显示 'Failed to initialize'"],
+        "cause": "Copilot 扩展数据损坏",
+        "fix": "清除 Copilot 缓存并重新安装扩展",
+        "reference": "https://github.com/github/feedback/discussions"
+      }
+    ]
+  },
+  "roo": {
+    "latest_version": "0.18.0",
+    "known_issues": [
+      {
+        "id": "ROO-001",
+        "title": "Roo Code 无法启动",
+        "symptoms": ["VSCode 中 Roo 按钮无响应", "显示 'Extension activation failed'"],
+        "cause": "扩展依赖缺失或 Node.js 版本不兼容",
+        "fix": "更新 VSCode，重新安装 Roo Code 扩展",
+        "reference": "https://github.com/RooVetGit/Roo-Code/issues"
+      }
+    ]
+  },
+  "continue": {
+    "latest_version": "0.8.60",
+    "known_issues": [
+      {
+        "id": "CNT-001",
+        "title": "本地模型加载失败",
+        "symptoms": ["Ollama 模型无法连接", "显示 'Model load failed'"],
+        "cause": "Ollama 服务未启动或模型未下载",
+        "fix": "启动 Ollama 服务，下载所需模型",
+        "reference": "https://docs.continue.dev/troubleshooting"
+      }
+    ]
+  },
+  "augment": {
+    "latest_version": "1.2.0",
+    "known_issues": [
+      {
+        "id": "AUG-001",
+        "title": "Augment 扩展无法激活",
+        "symptoms": ["VSCode 中 Augment 不显示", "显示 'Activation error'"],
+        "cause": "VSCode 版本不兼容或扩展缓存损坏",
+        "fix": "更新 VSCode 至最新版本，清除扩展缓存",
+        "reference": "https://www.augmentcode.com/support"
+      }
+    ]
+  },
+  "opencode": {
+    "latest_version": "0.5.0",
+    "known_issues": [
+      {
+        "id": "OPN-001",
+        "title": "配置文件解析错误",
+        "symptoms": ["启动时显示 'Config parse error'", "使用默认配置"],
+        "cause": "opencode.json 包含无效字段或格式错误",
+        "fix": "验证 opencode.json 格式，移除无效字段",
+        "reference": "https://github.com/opencode-ai/opencode/issues"
+      }
+    ]
+  },
+  "hermes": {
+    "latest_version": "0.3.0",
+    "known_issues": [
+      {
+        "id": "HRM-001",
+        "title": "Agent 配置丢失",
+        "symptoms": ["Hermes 无法加载自定义 Agent", "显示 'Config not found'"],
+        "cause": ".hermes/config.json 被意外删除或覆盖",
+        "fix": "从备份恢复配置或重新初始化",
+        "reference": "https://github.com/hermes-agent/hermes/issues"
+      }
+    ]
+  }
+}

@@ -25,7 +25,7 @@ import urllib.parse
 if sys.platform == 'win32':
     os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
 
-from agent_registry import AGENT_PATHS
+from agent_registry import AGENT_PATHS, get_agent_links, load_repair_knowledge_base
 from core.config_scanner import ConfigScanner, AgentConfigScan
 from core.env_detector import EnvironmentDetector, detect_environment
 from core.download_manager import DownloadManager, DownloadMode, download_manager
@@ -512,6 +512,13 @@ class RepairHandler(SimpleHTTPRequestHandler):
         elif parsed.path == "/api/execute-all":
             threading.Thread(target=self._execute_all, daemon=True).start()
             self._json_response({"status": "fixing_started"})
+        elif parsed.path.startswith("/api/agent-links/"):
+            agent_id = parsed.path.split("/")[-1]
+            links = get_agent_links(agent_id)
+            self._json_response(links)
+        elif parsed.path == "/api/knowledge-base":
+            kb = load_repair_knowledge_base()
+            self._json_response(kb)
         elif parsed.path.startswith("/api/"):
             super().do_GET()
         else:
@@ -1179,6 +1186,34 @@ body::before {
   color: var(--accent);
   margin-bottom: 8px;
   font-size: 13px;
+}
+
+.agent-links-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.agent-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 12px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.agent-link-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .config-item {
@@ -2078,7 +2113,36 @@ function showConfigDetails(state) {
       html += '</div>';
     }
     
+    // 官方链接与问题反馈（动态加载）
+    html += '<div class="config-section">';
+    html += '<div class="config-section-title">🔗 官方资源</div>';
+    html += `<div class="agent-links-grid" id="agent-links-${agent.agent_id}">`;
+    html += '<span style="color:var(--text3);font-size:12px;">加载中...</span>';
     html += '</div>';
+    html += '</div>';
+    
+    html += '</div>';
+  });
+  
+  // 动态加载每个工具的官方链接
+  installedAgents.forEach(agent => {
+    fetch(`/api/agent-links/${agent.agent_id}`)
+      .then(r => r.json())
+      .then(links => {
+        const container = document.getElementById(`agent-links-${agent.agent_id}`);
+        if (!container) return;
+        let linkHtml = '';
+        if (links.website) linkHtml += `<a href="${links.website}" target="_blank" class="agent-link-btn" title="官方网站">🌐 官网</a>`;
+        if (links.docs) linkHtml += `<a href="${links.docs}" target="_blank" class="agent-link-btn" title="官方文档">📖 文档</a>`;
+        if (links.github) linkHtml += `<a href="${links.github}" target="_blank" class="agent-link-btn" title="GitHub 仓库">💻 GitHub</a>`;
+        if (links.issues) linkHtml += `<a href="${links.issues}" target="_blank" class="agent-link-btn" title="已知问题">🐛 问题</a>`;
+        if (links.feedback) linkHtml += `<a href="${links.feedback}" target="_blank" class="agent-link-btn" title="意见反馈">💬 反馈</a>`;
+        container.innerHTML = linkHtml || '<span style="color:var(--text3);font-size:12px;">暂无链接</span>';
+      })
+      .catch(() => {
+        const container = document.getElementById(`agent-links-${agent.agent_id}`);
+        if (container) container.innerHTML = '<span style="color:var(--text3);font-size:12px;">链接加载失败</span>';
+      });
   });
   
   html += '</div>';
