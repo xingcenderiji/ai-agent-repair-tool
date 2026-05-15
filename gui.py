@@ -195,9 +195,8 @@ class RepairEngine:
 
             self.session.agents.append(asdict(status))
 
-        has_issues = any(a["issues"] for a in self.session.agents if a["installed"])
-        # 扫描完成后进入preview阶段（配置预览）
-        self.session.current_phase = "preview" if has_issues else "done"
+        # 扫描完成后总是进入preview阶段显示结果
+        self.session.current_phase = "preview"
         return asdict(self.session)
 
     def scan_config_details(self):
@@ -523,6 +522,14 @@ class RepairHandler(SimpleHTTPRequestHandler):
             super().do_GET()
         else:
             super().do_GET()
+
+    def do_OPTIONS(self):
+        """处理 CORS 预检请求"""
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
@@ -1943,35 +1950,59 @@ function showPhase(phase) {
 
 // API 调用
 async function api(path, method = 'GET') {
-  const opts = { method };
-  if (method === 'POST') opts.headers = { 'Content-Type': 'application/json' };
-  const res = await fetch(API + path, opts);
-  return res.json();
+  try {
+    const opts = { method };
+    if (method === 'POST') {
+      opts.headers = { 'Content-Type': 'application/json' };
+    }
+    const res = await fetch(API + path, opts);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error('API Error:', path, err);
+    throw err;
+  }
 }
 
 // 开始扫描
 async function startScan() {
   showPhase('scan');
-  document.getElementById('btnScan').disabled = true;
-  document.getElementById('btnScan').innerHTML = '<span class="spinner"></span> 扫描中...';
-  document.getElementById('logPanel').classList.remove('hidden');
-  document.getElementById('logPanel').innerHTML = '<div class="log-line">开始扫描...</div>';
+  const btn = document.getElementById('btnScan');
+  const logPanel = document.getElementById('logPanel');
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 扫描中...';
+  logPanel.classList.remove('hidden');
+  logPanel.innerHTML = '<div class="log-line">开始扫描...</div>';
 
-  await api('/api/scan', 'POST');
+  try {
+    await api('/api/scan', 'POST');
+  } catch (err) {
+    logPanel.innerHTML += `<div class="log-line error">扫描启动失败: ${err.message}</div>`;
+    btn.disabled = false;
+    btn.textContent = '重新扫描';
+    return;
+  }
 
   // 轮询状态
   pollTimer = setInterval(async () => {
-    const state = await api('/api/state');
-    currentState = state;
-    updateLog(state.log);
-    if (state.current_phase === 'preview') {
-      clearInterval(pollTimer);
-      document.getElementById('btnScan').disabled = false;
-      document.getElementById('btnScan').textContent = '重新扫描';
-      showPreview(state);
-    } else if (state.current_phase === 'done') {
-      clearInterval(pollTimer);
-      showDone(state);
+    try {
+      const state = await api('/api/state');
+      currentState = state;
+      updateLog(state.log);
+      if (state.current_phase === 'preview') {
+        clearInterval(pollTimer);
+        btn.disabled = false;
+        btn.textContent = '重新扫描';
+        showPreview(state);
+      } else if (state.current_phase === 'done') {
+        clearInterval(pollTimer);
+        showDone(state);
+      }
+    } catch (err) {
+      console.error('Poll error:', err);
     }
   }, 500);
 }
