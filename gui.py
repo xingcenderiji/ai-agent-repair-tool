@@ -2046,6 +2046,43 @@ function showPreview(state) {
   showPhase('preview');
   document.getElementById('previewLogPanel').classList.remove('hidden');
   updatePreviewLog(state.log);
+  
+  // 显示扫描结果摘要
+  const installed = state.agents.filter(a => a.installed);
+  const withIssues = installed.filter(a => a.issues && a.issues.length > 0);
+  
+  let summaryHtml = '<div class="card" style="margin-bottom:16px;">';
+  summaryHtml += '<div class="card-title">📊 扫描结果</div>';
+  summaryHtml += `<p>发现 ${installed.length} 个已安装工具`;
+  if (withIssues.length > 0) {
+    summaryHtml += `，其中 ${withIssues.length} 个需要修复`;
+  }
+  summaryHtml += '</p>';
+  
+  if (installed.length > 0) {
+    summaryHtml += '<div style="margin-top:12px;">';
+    installed.forEach(agent => {
+      const status = agent.issues && agent.issues.length > 0 ? '⚠️' : '✅';
+      summaryHtml += `<div style="padding:8px;border-bottom:1px solid var(--border);">`;
+      summaryHtml += `${agent.icon} ${agent.name} ${status}`;
+      if (agent.issues && agent.issues.length > 0) {
+        summaryHtml += `<div style="font-size:12px;color:var(--warning);margin-top:4px;">`;
+        agent.issues.forEach(issue => {
+          summaryHtml += `• ${issue}<br>`;
+        });
+        summaryHtml += '</div>';
+      }
+      summaryHtml += '</div>';
+    });
+    summaryHtml += '</div>';
+  }
+  
+  summaryHtml += '</div>';
+  
+  // 插入到配置预览区域之前
+  const configPreview = document.getElementById('configPreview');
+  configPreview.innerHTML = summaryHtml;
+  configPreview.classList.remove('hidden');
 }
 
 // 开始详细配置扫描
