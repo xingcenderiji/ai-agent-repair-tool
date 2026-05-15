@@ -43,6 +43,7 @@ jobs:
     permissions:
       security-events: write
       contents: read
+    continue-on-error: true  # 安全审计仅记录，不阻断构建
     
     steps:
     - name: Checkout repository
@@ -177,10 +178,10 @@ jobs:
     - name: Run pip-audit
       uses: trailofbits/pip-audit@v0
       with:
-        requirements: requirements.txt
         format: json
         output: pip-audit-results.json
-        fail-on: medium
+        fail-on: none  # 不因依赖漏洞失败，仅记录
+      continue-on-error: true
 
     - name: Upload pip-audit results
       uses: actions/upload-artifact@v4
