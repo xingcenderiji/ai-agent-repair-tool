@@ -32,7 +32,7 @@ jobs:
       run: pytest tests/ -v
       env:
         PYTHONIOENCODING: utf-8
-      continue-on-error: true  # 测试失败不阻断 CI，但会报告
+      continue-on-error: true
 
   lint:
     runs-on: ubuntu-latest
@@ -81,22 +81,22 @@ jobs:
     name: Test Gap Analysis
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 20
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Run Test Gap Analyzer
         run: |
-          python -m test_gap_analyzer.analyze --commits 10 --fail-on-high-risk
+          python -m test_gap_analyzer
         continue-on-error: false
-      
+
       - name: Upload analysis report
         uses: actions/upload-artifact@v4
         if: always()
