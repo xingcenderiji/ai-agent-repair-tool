@@ -1,0 +1,471 @@
+[    1079ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[    1079ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26)
+    at http://127.0.0.1:8080/:1258:5 @ http://127.0.0.1:8080/:1389
+[    1080ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26)
+    at http://127.0.0.1:8080/:1258:5 @ http://127.0.0.1:8080/:1278
+[   11096ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[   11097ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[   11097ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[   21080ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[   21080ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[   21080ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[   31079ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[   31079ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[   31079ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[   41091ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[   41091ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[   41091ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[   51080ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[   51080ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[   51080ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[   61089ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[   61089ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[   61089ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[   71092ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[   71092ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[   71092ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[   81093ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[   81093ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[   81093ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[   91095ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[   91095ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[   91095ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  101082ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  101082ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  101082ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  111090ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  111090ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  111090ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  121079ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  121080ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  121080ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  131082ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  131082ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  131082ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  141081ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  141081ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  141081ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  151084ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  151084ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  151084ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  161094ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  161094ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  161095ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  171092ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  171093ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  171093ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  181081ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  181081ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  181081ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  191083ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  191083ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  191083ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  201080ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  201080ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  201081ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  211087ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  211087ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  211087ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  221094ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  221094ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  221094ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  231087ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  231087ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  231088ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  241082ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  241082ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  241082ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  251094ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  251094ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  251094ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  261092ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  261092ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  261092ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  271097ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  271097ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  271097ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  281092ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  281092ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  281093ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  291084ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  291084ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  291085ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  301092ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  301092ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  301092ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  311086ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  311086ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  311086ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  321082ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  321082ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  321082ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  331182ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  331182ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  331182ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  341088ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  341088ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  341088ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  351090ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  351090ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  351090ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  361080ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  361081ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  361081ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  371092ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  371092ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  371092ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  381093ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  381093ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  381093ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  391087ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  391087ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  391087ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  401086ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  401086ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  401086ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  411081ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  411081ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  411082ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  421086ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  421086ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  421086ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  431089ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  431089ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  431089ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  441093ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  441093ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  441093ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  451085ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  451085ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  451085ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  461090ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  461090ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  461090ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  471091ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  471091ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  471092ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  481086ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  481086ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  481086ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  491086ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  491086ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  491086ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  501090ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  501090ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  501090ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  511083ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  511083ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  511084ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  521085ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  521085ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  521086ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  531095ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  531095ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  531096ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  541088ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  541088ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  541088ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  551095ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  551095ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  551095ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  561090ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  561090ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  561090ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  571083ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  571083ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  571083ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  581090ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  581090ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  581091ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  591088ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  591088ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  591088ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  601089ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  601089ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  601089ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  611085ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  611085ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  611085ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  621089ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  621089ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  621089ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  631082ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  631082ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  631083ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  641094ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  641094ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  641094ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  651085ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  651085ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  651086ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278
+[  661095ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://127.0.0.1:8080/api/auto-install/scan:0
+[  661095ms] [ERROR] API Error: /api/auto-install/scan TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1389
+[  661095ms] [LOG] 扫描下载目录失败: TypeError: Failed to fetch
+    at api (http://127.0.0.1:8080/:1384:23)
+    at scanDownloads (http://127.0.0.1:8080/:1273:26) @ http://127.0.0.1:8080/:1278

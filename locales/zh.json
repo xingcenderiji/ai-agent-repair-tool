@@ -1,0 +1,80 @@
+{
+  "app_name": "天工",
+  "app_description": "AI Agent 修复工具 - 自动检测并修复 AI 开发工具",
+  
+  "scanning_agents": "正在扫描 AI Agent...",
+  "scan_complete": "扫描完成",
+  "scan_found_issues": "发现 {count} 个需要修复的 Agent",
+  "scan_no_issues": "未发现需要修复的 Agent",
+  
+  "repairing_agent": "正在修复 {agent_name}...",
+  "repair_step_backup": "[1/3] 创建备份...",
+  "repair_step_cache": "[2/3] 清理缓存...",
+  "repair_step_config": "[3/3] 修复配置文件...",
+  "repair_complete": "修复完成",
+  "repair_failed": "修复失败",
+  "repair_success": "修复成功",
+  
+  "backup_created": "备份已创建: {path}",
+  "backup_failed": "备份失败: {error}",
+  "cache_cleaned": "已清理 {count} 个缓存目录",
+  "config_fixed": "已修复 {count} 个配置文件",
+  
+  "validating": "正在验证修复结果...",
+  "validation_success": "所有问题已修复",
+  "validation_failed": "仍有 {count} 个问题未解决",
+  
+  "summary_title": "修复摘要报告",
+  "summary_total": "修复 Agent 总数: {count}",
+  "summary_success": "成功: {count}",
+  "summary_failed": "失败: {count}",
+  "summary_errors": "错误数: {count}",
+  "summary_warnings": "警告数: {count}",
+  
+  "agent_status_healthy": "正常",
+  "agent_status_warning": "警告",
+  "agent_status_error": "错误",
+  "agent_status_not_installed": "未安装",
+  "agent_status_unknown": "未知",
+  
+  "issue_config_missing": "配置文件缺失",
+  "issue_config_corrupted": "配置文件损坏: {file}",
+  "issue_cache_large": "缓存过大: {size}MB",
+  "issue_plugin_corrupted": "插件损坏: {plugin}",
+  
+  "error_permission_denied": "权限不足: {path}",
+  "error_file_not_found": "文件未找到: {path}",
+  "error_disk_full": "磁盘已满",
+  "error_unknown": "未知错误: {error}",
+  
+  "press_any_key": "按任意键退出...",
+  "countdown_cancel": "(按 Ctrl+C 取消)",
+  "operation_cancelled": "操作已取消",
+  
+  "gui_title": "AI Agent 修复工具 - 图形界面模式",
+  "gui_scan": "扫描",
+  "gui_repair": "修复",
+  "gui_backup": "备份",
+  "gui_restore": "恢复",
+  "gui_settings": "设置",
+  "gui_language": "语言",
+  
+  "audit_log_title": "审计日志",
+  "audit_session_start": "会话开始: {session_id}",
+  "audit_session_end": "会话结束",
+  "audit_operation": "操作: {type}",
+  "audit_status": "状态: {status}",
+  
+  "security_blocked": "安全拦截: {reason}",
+  "security_warning": "安全警告: {reason}",
+  
+  "language_changed": "语言已切换为: {language}",
+  "language_not_supported": "不支持的语言: {language}",
+  
+  "help_usage": "用法: {program} [选项]",
+  "help_scan": "扫描所有 Agent",
+  "help_repair": "修复指定 Agent",
+  "help_backup": "备份指定 Agent",
+  "help_restore": "从备份恢复",
+  "help_language": "设置语言 (en, zh, ja, es 等)"
+}

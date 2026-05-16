@@ -1,0 +1,15 @@
+[     256ms] Unexpected token '}'
+[     449ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:8080/favicon.ico:0
+[    5235ms] ReferenceError: startScan is not defined
+    at HTMLButtonElement.onclick (http://127.0.0.1:8080/:941:76)
+[   16426ms] ReferenceError: startScan is not defined
+    at HTMLButtonElement.onclick (http://127.0.0.1:8080/:941:76)
+[   32862ms] ReferenceError: startScan is not defined
+    at HTMLButtonElement.onclick (http://127.0.0.1:8080/:941:76)
+[   33964ms] ReferenceError: startScan is not defined
+    at HTMLButtonElement.onclick (http://127.0.0.1:8080/:941:76)
+[  265034ms] ReferenceError: startScan is not defined
+    at HTMLButtonElement.onclick (http://127.0.0.1:8080/:941:76)
+[  265172ms] ReferenceError: startScan is not defined
+    at HTMLButtonElement.onclick (http://127.0.0.1:8080/:941:76)
+[  267099ms] Unexpected token '}'

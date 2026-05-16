@@ -1,0 +1,36 @@
+name: Build Check
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install PyInstaller
+      run: pip install pyinstaller
+
+    - name: Build
+      run: |
+        pyinstaller --onefile --name AI-Agent-Repair-Check --noconsole gui.py
+      shell: bash
+
+    - name: Verify build
+      run: |
+        ls -la dist/
+      shell: bash

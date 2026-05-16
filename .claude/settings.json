@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest --tb=short)",
+      "Bash(pip install *)",
+      "Bash(python -m pytest tests/ -v --tb=short)",
+      "Bash(python -m pytest tests/ -v --tb=long)",
+      "Bash(python -c ' *)",
+      "Bash(python gui.py)",
+      "Bash(curl -s http://127.0.0.1:8080)",
+      "Bash(curl -s http://127.0.0.1:8080/api/scan)",
+      "Bash(curl -s http://127.0.0.1:8080/api/status)",
+      "Bash(curl -s http://127.0.0.1:8080/api/state)",
+      "Bash(curl -s http://127.0.0.1:8080/api/environment)",
+      "Bash(curl -s -X POST http://127.0.0.1:8080/api/scan-config)",
+      "Bash(start http://127.0.0.1:8080)",
+      "Bash(curl -s -X POST http://127.0.0.1:8080/api/scan -v)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot"
+    ]
+  }
+}

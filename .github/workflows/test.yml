@@ -1,0 +1,105 @@
+name: Test AI Agent Repair Tool
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.10', '3.12']
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pyyaml
+
+    - name: Run tests
+      run: pytest tests/ -v
+      env:
+        PYTHONIOENCODING: utf-8
+      continue-on-error: true  # 测试失败不阻断 CI，但会报告
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install linting tools
+      run: pip install flake8
+
+    - name: Lint with flake8
+      run: flake8 repair_tool.py --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install build dependencies
+      run: pip install pyinstaller
+
+    - name: Build executable
+      run: pyinstaller --onefile --name AI-Agent-Repair repair_tool.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: AI-Agent-Repair-${{ matrix.os }}
+        path: dist/
+
+  test-gap-analysis:
+    name: Test Gap Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Run Test Gap Analyzer
+        run: |
+          python -m test_gap_analyzer.analyze --commits 10 --fail-on-high-risk
+        continue-on-error: false
+      
+      - name: Upload analysis report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-gap-analysis-report
+          path: tests/

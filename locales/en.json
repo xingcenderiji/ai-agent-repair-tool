@@ -1,0 +1,80 @@
+{
+  "app_name": "Tiangong",
+  "app_description": "AI Agent Repair Tool - Automatically detect and repair AI development tools",
+  
+  "scanning_agents": "Scanning AI Agents...",
+  "scan_complete": "Scan Complete",
+  "scan_found_issues": "Found {count} agents with issues",
+  "scan_no_issues": "No issues found",
+  
+  "repairing_agent": "Repairing {agent_name}...",
+  "repair_step_backup": "[1/3] Creating backup...",
+  "repair_step_cache": "[2/3] Cleaning cache...",
+  "repair_step_config": "[3/3] Repairing configuration...",
+  "repair_complete": "Repair Complete",
+  "repair_failed": "Repair Failed",
+  "repair_success": "Repair Successful",
+  
+  "backup_created": "Backup created: {path}",
+  "backup_failed": "Backup failed: {error}",
+  "cache_cleaned": "Cleaned {count} cache directories",
+  "config_fixed": "Fixed {count} configuration files",
+  
+  "validating": "Validating repair results...",
+  "validation_success": "All issues fixed",
+  "validation_failed": "{count} issues remaining",
+  
+  "summary_title": "Repair Summary Report",
+  "summary_total": "Total agents: {count}",
+  "summary_success": "Successful: {count}",
+  "summary_failed": "Failed: {count}",
+  "summary_errors": "Errors: {count}",
+  "summary_warnings": "Warnings: {count}",
+  
+  "agent_status_healthy": "Healthy",
+  "agent_status_warning": "Warning",
+  "agent_status_error": "Error",
+  "agent_status_not_installed": "Not Installed",
+  "agent_status_unknown": "Unknown",
+  
+  "issue_config_missing": "Configuration file missing",
+  "issue_config_corrupted": "Configuration file corrupted: {file}",
+  "issue_cache_large": "Cache too large: {size}MB",
+  "issue_plugin_corrupted": "Plugin corrupted: {plugin}",
+  
+  "error_permission_denied": "Permission denied: {path}",
+  "error_file_not_found": "File not found: {path}",
+  "error_disk_full": "Disk full",
+  "error_unknown": "Unknown error: {error}",
+  
+  "press_any_key": "Press any key to exit...",
+  "countdown_cancel": "(Press Ctrl+C to cancel)",
+  "operation_cancelled": "Operation cancelled",
+  
+  "gui_title": "AI Agent Repair Tool - GUI Mode",
+  "gui_scan": "Scan",
+  "gui_repair": "Repair",
+  "gui_backup": "Backup",
+  "gui_restore": "Restore",
+  "gui_settings": "Settings",
+  "gui_language": "Language",
+  
+  "audit_log_title": "Audit Log",
+  "audit_session_start": "Session started: {session_id}",
+  "audit_session_end": "Session ended",
+  "audit_operation": "Operation: {type}",
+  "audit_status": "Status: {status}",
+  
+  "security_blocked": "Security blocked: {reason}",
+  "security_warning": "Security warning: {reason}",
+  
+  "language_changed": "Language changed to: {language}",
+  "language_not_supported": "Language not supported: {language}",
+  
+  "help_usage": "Usage: {program} [options]",
+  "help_scan": "Scan all agents",
+  "help_repair": "Repair specified agent",
+  "help_backup": "Backup specified agent",
+  "help_restore": "Restore from backup",
+  "help_language": "Set language (en, zh, ja, es, etc.)"
+}

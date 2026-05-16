@@ -1,0 +1,28 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - heading "AI Agent 智能修复工具" [level=1] [ref=e4]
+    - paragraph [ref=e5]: 全自动扫描、诊断、修复 AI 开发工具问题
+    - generic [ref=e6]: ❓ 未知环境 | 2026/5/16 23:57:40
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]: "1"
+      - generic [ref=e10]: 扫描
+    - generic [ref=e12]:
+      - generic [ref=e13]: "2"
+      - generic [ref=e14]: 预览
+    - generic [ref=e16]:
+      - generic [ref=e17]: "3"
+      - generic [ref=e18]: 审查
+    - generic [ref=e20]:
+      - generic [ref=e21]: "4"
+      - generic [ref=e22]: 确认
+    - generic [ref=e24]:
+      - generic [ref=e25]: "5"
+      - generic [ref=e26]: 修复
+    - generic [ref=e28]:
+      - generic [ref=e29]: "6"
+      - generic [ref=e30]: 完成
+  - generic [ref=e32]:
+    - generic [ref=e33]: 🔍 扫描 Agent 安装状态
+    - paragraph [ref=e34]: 点击下方按钮开始扫描，工具将自动检测已安装的 AI 开发工具及其健康状态。
+    - button "开始扫描" [ref=e36] [cursor=pointer]

@@ -1,0 +1,80 @@
+{
+  "app_name": "天工",
+  "app_description": "AI Agent 修復ツール - AI 開発ツールを自動検出・修復",
+
+  "scanning_agents": "AI Agent をスキャン中...",
+  "scan_complete": "スキャン完了",
+  "scan_found_issues": "{count} 個の修復が必要な Agent が見つかりました",
+  "scan_no_issues": "修復が必要な Agent はありません",
+
+  "repairing_agent": "{agent_name} を修復中...",
+  "repair_step_backup": "[1/3] バックアップを作成中...",
+  "repair_step_cache": "[2/3] キャッシュを削除中...",
+  "repair_step_config": "[3/3] 設定ファイルを修復中...",
+  "repair_complete": "修復完了",
+  "repair_failed": "修復失敗",
+  "repair_success": "修復成功",
+
+  "backup_created": "バックアップ作成: {path}",
+  "backup_failed": "バックアップ失敗: {error}",
+  "cache_cleaned": "{count} 個のキャッシュディレクトリを削除しました",
+  "config_fixed": "{count} 個の設定ファイルを修復しました",
+
+  "validating": "修復結果を検証中...",
+  "validation_success": "すべての問題が修復されました",
+  "validation_failed": "{count} 個の問題が残っています",
+
+  "summary_title": "修復サマリーレポート",
+  "summary_total": "修復 Agent 総数: {count}",
+  "summary_success": "成功: {count}",
+  "summary_failed": "失敗: {count}",
+  "summary_errors": "エラー数: {count}",
+  "summary_warnings": "警告数: {count}",
+
+  "agent_status_healthy": "正常",
+  "agent_status_warning": "警告",
+  "agent_status_error": "エラー",
+  "agent_status_not_installed": "未インストール",
+  "agent_status_unknown": "不明",
+
+  "issue_config_missing": "設定ファイルが見つかりません",
+  "issue_config_corrupted": "設定ファイルが破損: {file}",
+  "issue_cache_large": "キャッシュが大きすぎます: {size}MB",
+  "issue_plugin_corrupted": "プラグインが破損: {plugin}",
+
+  "error_permission_denied": "権限がありません: {path}",
+  "error_file_not_found": "ファイルが見つかりません: {path}",
+  "error_disk_full": "ディスクが一杯です",
+  "error_unknown": "不明なエラー: {error}",
+
+  "press_any_key": "任意のキーを押して終了...",
+  "countdown_cancel": "(Ctrl+C でキャンセル)",
+  "operation_cancelled": "操作がキャンセルされました",
+
+  "gui_title": "AI Agent 修復ツール - GUI モード",
+  "gui_scan": "スキャン",
+  "gui_repair": "修復",
+  "gui_backup": "バックアップ",
+  "gui_restore": "復元",
+  "gui_settings": "設定",
+  "gui_language": "言語",
+
+  "audit_log_title": "監査ログ",
+  "audit_session_start": "セッション開始: {session_id}",
+  "audit_session_end": "セッション終了",
+  "audit_operation": "操作: {type}",
+  "audit_status": "状態: {status}",
+
+  "security_blocked": "セキュリティブロック: {reason}",
+  "security_warning": "セキュリティ警告: {reason}",
+
+  "language_changed": "言語が変更されました: {language}",
+  "language_not_supported": "サポートされていない言語: {language}",
+
+  "help_usage": "使用方法: {program} [オプション]",
+  "help_scan": "すべての Agent をスキャン",
+  "help_repair": "指定した Agent を修復",
+  "help_backup": "指定した Agent をバックアップ",
+  "help_restore": "バックアップから復元",
+  "help_language": "言語を設定 (en, zh, ja, es など)"
+}

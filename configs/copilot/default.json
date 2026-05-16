@@ -1,0 +1,47 @@
+{
+  "agent_name": "GitHub Copilot",
+  "min_supported_version": "1.0.0",
+  "config_files": [
+    "config.json"
+  ],
+  "cache_dirs": [
+    "cache",
+    "Cache"
+  ],
+  "log_files": [
+    "*.log"
+  ],
+  "critical_files": [],
+  "global_storage_path": "Code/User/globalStorage/github.copilot",
+  "default_config": {
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "common_issues": {
+    "auth_failed": {
+      "symptom": "Authentication failed or token expired",
+      "cause": "Stale authentication token in globalStorage",
+      "fix": ["delete_global_storage", "restart", "re_login"]
+    },
+    "connection_failed": {
+      "symptom": "Cannot connect to Copilot server",
+      "cause": "Network/proxy issue or token invalid",
+      "fix": ["check_network", "delete_global_storage", "restart"]
+    },
+    "suggestions_stuck": {
+      "symptom": "Suggestions repeated/stuck/blank",
+      "cause": "Cache corruption",
+      "fix": ["clear_global_storage", "reload_window"]
+    }
+  },
+  "fix_commands": {
+    "macos_linux": "rm -rf ~/Library/Application\\ Support/Code/User/globalStorage/github.copilot",
+    "windows": "rmdir /s \"%APPDATA%\\Code\\User\\globalStorage\\github.copilot\""
+  },
+  "repair_strategies": {
+    "config_corrupted": "replace_with_default",
+    "auth_token_stale": "delete_global_storage",
+    "cache_corrupted": "clear_global_storage",
+    "permission_denied": "skip_and_report"
+  }
+}

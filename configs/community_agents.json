@@ -1,0 +1,16 @@
+{
+  "_comment": "社区贡献的Agent配置会合并到这里，格式与 agent_registry.py 中的 AGENT_REGISTRY 相同",
+  "_see": "https://github.com/xingcenderiji/ai-agent-repair-tool/blob/main/CONTRIBUTING.md",
+  "_example": {
+    "new_agent": {
+      "name": "New Agent",
+      "icon": "🆕",
+      "category": "IDE插件",
+      "paths": {
+        "win": ["%USERPROFILE%/.new-agent"],
+        "mac": ["~/.new-agent"],
+        "linux": ["~/.new-agent"]
+      }
+    }
+  }
+}

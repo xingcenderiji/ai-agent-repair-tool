@@ -1,0 +1,62 @@
+{
+  "agent_name": "Cursor",
+  "min_supported_version": "0.1.0",
+  "config_files": [
+    "User/settings.json",
+    "settings.json",
+    "argv.json"
+  ],
+  "cache_dirs": [
+    "CachedData",
+    "Cache",
+    "GPUCache",
+    "Code Cache",
+    "CachedExtensionVSCodeData"
+  ],
+  "log_files": [
+    "cursor_logs/*.log",
+    "*.log"
+  ],
+  "critical_files": [
+    "User/settings.json"
+  ],
+  "state_files": [
+    "User/globalStorage/storage.json",
+    "state.vscdb"
+  ],
+  "default_config": {
+    "gpuAcceleration": "off",
+    "cursor.autoUpdate": false,
+    "cursor.logLevel": "verbose",
+    "editor.suggestSelection": "first",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": false
+    }
+  },
+  "common_issues": {
+    "ai_mode_not_working": {
+      "symptom": "AI mode not responding or freezing",
+      "cause": "GPU acceleration conflict or cache corruption",
+      "fix": ["set_gpu_acceleration_off", "clear_cache"]
+    },
+    "mcp_connection_failed": {
+      "symptom": "Cannot connect to MCP server",
+      "cause": "Invalid mcpServers configuration",
+      "fix": ["validate_mcp_config", "restart"]
+    },
+    "freezing_after_response": {
+      "symptom": "Cursor freezes after AI response",
+      "cause": "Background process conflict",
+      "fix": ["clear_cached_data", "disable_auto_update"]
+    }
+  },
+  "repair_strategies": {
+    "config_corrupted": "replace_with_default",
+    "cache_oversized": "clean_all",
+    "gpu_glitch": "set_gpu_acceleration_off",
+    "mcp_invalid": "validate_and_repair",
+    "permission_denied": "skip_and_report"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "agent_name": "OpenCode",
+  "min_supported_version": "1.0.0",
+  "config_files": [
+    "settings.json",
+    "config.json",
+    ".opencode/config.json"
+  ],
+  "cache_dirs": [
+    "cache",
+    ".cache",
+    "temp",
+    ".temp"
+  ],
+  "log_files": [
+    "*.log",
+    "logs/*.log"
+  ],
+  "critical_files": [
+    "settings.json"
+  ],
+  "default_config": {
+    "version": "1.0.0",
+    "settings": {
+      "autoUpdate": true,
+      "theme": "dark"
+    }
+  },
+  "repair_strategies": {
+    "config_corrupted": "replace_with_default",
+    "cache_oversized": "clean_all",
+    "permission_denied": "skip_and_report"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "agent_name": "Cline",
+  "min_supported_version": "1.0.0",
+  "config_files": [
+    "settings.json",
+    "cline.json",
+    "config.json"
+  ],
+  "cache_dirs": [
+    "cache",
+    "Cache",
+    "temp"
+  ],
+  "log_files": [
+    "*.log",
+    "logs/*.log"
+  ],
+  "critical_files": [
+    "settings.json"
+  ],
+  "vscode_global_storage": "Code/User/globalStorage/saoudrizwanclaude-dev.claude-dev",
+  "default_config": {
+    "version": "1.0.0",
+    "terminalReuse": true,
+    "terminalTimeout": 10000,
+    "settings": {}
+  },
+  "common_issues": {
+    "terminal_integration_failed": {
+      "symptom": "Terminal integration not working",
+      "cause": "Shell configuration error",
+      "fix": ["set_default_terminal", "check_shell_path"]
+    },
+    "api_config_error": {
+      "symptom": "API configuration error",
+      "cause": "Invalid base URL or API key",
+      "fix": ["validate_api_endpoint", "check_api_key"]
+    },
+    "model_incompatible": {
+      "symptom": "Model not compatible",
+      "cause": "Unsupported model selected",
+      "fix": ["select_compatible_model"]
+    }
+  },
+  "recommended_settings": {
+    "cline.terminalReuse": true,
+    "cline.terminalTimeout": 10000
+  },
+  "repair_strategies": {
+    "config_corrupted": "replace_with_default",
+    "terminal_failed": "reset_terminal_config",
+    "api_invalid": "validate_api_config",
+    "cache_oversized": "clean_all",
+    "permission_denied": "skip_and_report"
+  }
+}
