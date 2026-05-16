@@ -12,20 +12,20 @@ AI Agent Repair Tool - 安全审计工具
 日期：2026-05-15
 """
 
-import os
-import sys
-import json
 import argparse
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, List, Tuple, Optional
-from dataclasses import dataclass, asdict
-from enum import Enum
+import json
 import re
+import sys
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Dict, List, Optional
 
 
 class Severity(Enum):
     """漏洞严重度"""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -36,6 +36,7 @@ class Severity(Enum):
 @dataclass
 class Finding:
     """审计发现"""
+
     id: str
     title: str
     severity: Severity
@@ -107,130 +108,148 @@ class SecurityAuditor:
 
         for pattern, desc in credential_patterns:
             self._search_pattern(
-                pattern, desc, Severity.HIGH,
+                pattern,
+                desc,
+                Severity.HIGH,
                 "认证与访问控制",
-                "硬编码凭证会直接暴露给攻击者"
+                "硬编码凭证会直接暴露给攻击者",
             )
 
     def _audit_injection(self):
         """审计注入向量"""
         # SQL 注入风险
         sql_patterns = [
-            (r'cursor\.execute\s*\([^)]*\%s[^)]*\)', "参数化查询 (安全)"),
-            (r'execute\s*\([^)]*\+[^)]*\)', "字符串拼接 SQL (危险)"),
+            (r"cursor\.execute\s*\([^)]*\%s[^)]*\)", "参数化查询 (安全)"),
+            (r"execute\s*\([^)]*\+[^)]*\)", "字符串拼接 SQL (危险)"),
             (r'f["\'][^"\']*SELECT[^"\']*\{', "f-string SQL (危险)"),
         ]
 
         for pattern, desc in sql_patterns:
             is_safe = "安全" in desc
             self._search_pattern(
-                pattern, f"SQL查询检查: {desc}",
+                pattern,
+                f"SQL查询检查: {desc}",
                 Severity.LOW if is_safe else Severity.MEDIUM,
                 "注入向量",
-                "SQL 注入可导致数据泄露"
+                "SQL 注入可导致数据泄露",
             )
 
         # 命令注入风险
         cmd_patterns = [
-            (r'subprocess\.run\s*\([^)]*shell\s*=\s*True(?!.*# noqa: safe-shell)', "Shell=True 命令执行 (高风险)"),
-            (r'os\.system\s*\(', "os.system 命令执行 (高风险)"),
-            (r'os\.popen\s*\(', "os.popen 命令执行 (高风险)"),
-            (r'exec\s*\(', "动态代码执行 (极高风险)"),
-            (r'eval\s*\(', "动态代码执行 (极高风险)"),
+            (
+                r"subprocess\.run\s*\([^)]*shell\s*=\s*True(?!.*# noqa: safe-shell)",
+                "Shell=True 命令执行 (高风险)",
+            ),
+            (r"os\.system\s*\(", "os.system 命令执行 (高风险)"),
+            (r"os\.popen\s*\(", "os.popen 命令执行 (高风险)"),
+            (r"exec\s*\(", "动态代码执行 (极高风险)"),
+            (r"eval\s*\(", "动态代码执行 (极高风险)"),
         ]
 
         for pattern, desc in cmd_patterns:
             self._search_pattern(
-                pattern, desc,
+                pattern,
+                desc,
                 Severity.CRITICAL if "exec" in desc else Severity.HIGH,
                 "注入向量",
-                "命令注入可导致服务器被完全控制"
+                "命令注入可导致服务器被完全控制",
             )
 
         # 路径遍历风险
         path_patterns = [
-            (r'open\s*\([^)]*\+[^)]*\)', "字符串拼接文件路径"),
-            (r'Path\([^)]*\+[^)]*\)', "Path 拼接路径"),
-            (r'\.\./', "路径遍历符"),
+            (r"open\s*\([^)]*\+[^)]*\)", "字符串拼接文件路径"),
+            (r"Path\([^)]*\+[^)]*\)", "Path 拼接路径"),
+            (r"\.\./", "路径遍历符"),
         ]
 
         for pattern, desc in path_patterns:
             self._search_pattern(
-                pattern, f"路径操作检查: {desc}",
+                pattern,
+                f"路径操作检查: {desc}",
                 Severity.MEDIUM,
                 "注入向量",
-                "路径遍历可访问未授权文件"
+                "路径遍历可访问未授权文件",
             )
 
     def _audit_external_interactions(self):
         """审计外部交互"""
         # 网络请求检查
         network_patterns = [
-            (r'requests\.(?:get|post)\s*\(', "HTTP 请求"),
-            (r'urllib\.request', "urllib 请求"),
-            (r'fetch\s*\(', "Fetch API"),
-            (r'http\.request', "HTTP 请求"),
+            (r"requests\.(?:get|post)\s*\(", "HTTP 请求"),
+            (r"urllib\.request", "urllib 请求"),
+            (r"fetch\s*\(", "Fetch API"),
+            (r"http\.request", "HTTP 请求"),
         ]
 
         for pattern, desc in network_patterns:
             self._search_pattern(
-                pattern, f"网络请求: {desc}",
+                pattern,
+                f"网络请求: {desc}",
                 Severity.INFO,
                 "外部交互",
-                "检查请求是否正确处理 SSL/TLS"
+                "检查请求是否正确处理 SSL/TLS",
             )
 
         # Webhook 回调检查
         webhook_patterns = [
-            (r'webhook', "Webhook 处理"),
-            (r'callback', "回调函数"),
+            (r"webhook", "Webhook 处理"),
+            (r"callback", "回调函数"),
         ]
 
         for pattern, desc in webhook_patterns:
             self._search_pattern(
-                pattern, f"外部回调: {desc}",
+                pattern,
+                f"外部回调: {desc}",
                 Severity.LOW,
                 "外部交互",
-                "验证回调来源和签名"
+                "验证回调来源和签名",
             )
 
     def _audit_sensitive_data(self):
         """审计敏感数据处理"""
         # 日志记录检查
         log_patterns = [
-            (r'print\s*\([^)]*password', "日志记录密码"),
-            (r'print\s*\([^)]*secret', "日志记录密钥"),
-            (r'print\s*\([^)]*token', "日志记录令牌"),
-            (r'logging\.[^.]+\([^)]*password', "日志记录密码"),
-            (r'console\.log\s*\([^)]*password', "控制台日志密码"),
+            (r"print\s*\([^)]*password", "日志记录密码"),
+            (r"print\s*\([^)]*secret", "日志记录密钥"),
+            (r"print\s*\([^)]*token", "日志记录令牌"),
+            (r"logging\.[^.]+\([^)]*password", "日志记录密码"),
+            (r"console\.log\s*\([^)]*password", "控制台日志密码"),
         ]
 
         for pattern, desc in log_patterns:
             self._search_pattern(
-                pattern, f"敏感日志: {desc}",
+                pattern,
+                f"敏感日志: {desc}",
                 Severity.MEDIUM,
                 "敏感数据处理",
-                "日志中的敏感信息可被未授权访问"
+                "日志中的敏感信息可被未授权访问",
             )
 
         # 加密检查
         crypto_patterns = [
-            (r'hashlib\.md5', "MD5 哈希 (不安全)"),
-            (r'hashlib\.sha1', "SHA1 哈希 (不安全)"),
-            (r'Crypto\.Cipher', "加密实现"),
+            (r"hashlib\.md5", "MD5 哈希 (不安全)"),
+            (r"hashlib\.sha1", "SHA1 哈希 (不安全)"),
+            (r"Crypto\.Cipher", "加密实现"),
         ]
 
         for pattern, desc in crypto_patterns:
             is_weak = "不安全" in desc
             self._search_pattern(
-                pattern, f"加密检查: {desc}",
+                pattern,
+                f"加密检查: {desc}",
                 Severity.MEDIUM if is_weak else Severity.INFO,
                 "敏感数据处理",
-                "弱哈希算法应避免用于密码存储"
+                "弱哈希算法应避免用于密码存储",
             )
 
-    def _search_pattern(self, pattern: str, title: str, severity: Severity,
-                       category: str, impact: str):
+    def _search_pattern(
+        self,
+        pattern: str,
+        title: str,
+        severity: Severity,
+        category: str,
+        impact: str,
+    ):
         """搜索代码模式"""
         try:
             regex = re.compile(pattern, re.IGNORECASE)
@@ -240,15 +259,23 @@ class SecurityAuditor:
         for py_file in self.project_root.rglob("*.py"):
             # 排除测试文件、虚拟环境和生成的文件
             path_str = str(py_file)
-            if any(excluded in path_str for excluded in [
-                "node_modules", ".venv", ".git", "__pycache__",
-                "tests/", "test_", "_test.py"
-            ]):
+            if any(
+                excluded in path_str
+                for excluded in [
+                    "node_modules",
+                    ".venv",
+                    ".git",
+                    "__pycache__",
+                    "tests/",
+                    "test_",
+                    "_test.py",
+                ]
+            ):
                 continue
 
             try:
                 content = py_file.read_text(encoding="utf-8", errors="ignore")
-                lines = content.split('\n')
+                lines = content.split("\n")
                 matches = list(regex.finditer(content))
 
                 if matches:
@@ -256,44 +283,61 @@ class SecurityAuditor:
                     safe_matches = []
                     for match in matches:
                         # 获取匹配行号
-                        line_num = content[:match.start()].count('\n')
+                        line_num = content[: match.start()].count("\n")
                         # 检查该行及前后5行是否有安全注释
                         context_start = max(0, line_num - 2)
                         context_end = min(len(lines), line_num + 3)
-                        context = '\n'.join(lines[context_start:context_end])
-                        
+                        context = "\n".join(lines[context_start:context_end])
+
                         # 如果有安全注释，跳过此匹配
-                        if '# safe' in context.lower() or 'noqa' in context.lower():
+                        if (
+                            "# safe" in context.lower()
+                            or "noqa" in context.lower()
+                        ):
                             continue
                         safe_matches.append(match)
-                    
+
                     if not safe_matches:
                         continue
-                    
+
                     # 检查是否有对应的安全措施
-                    has_safe_alternative = any(safe in content for safe in [
-                        "paramiko",
-                        "getpass",
-                        "CryptContext",
-                        "hashlib.pbkdf2",
-                    ])
+                    has_safe_alternative = any(
+                        safe in content
+                        for safe in [
+                            "paramiko",
+                            "getpass",
+                            "CryptContext",
+                            "hashlib.pbkdf2",
+                        ]
+                    )
 
                     # 如果找到危险模式且没有安全措施，记录为发现
-                    if severity in [Severity.HIGH, Severity.CRITICAL, Severity.MEDIUM]:
-                        if not has_safe_alternative or "shell" in pattern.lower():
+                    if severity in [
+                        Severity.HIGH,
+                        Severity.CRITICAL,
+                        Severity.MEDIUM,
+                    ]:
+                        if (
+                            not has_safe_alternative
+                            or "shell" in pattern.lower()
+                        ):
                             finding = Finding(
                                 id=f"AUDIT-{len(self.findings)+1:03d}",
                                 title=title,
                                 severity=severity,
                                 category=category,
                                 description=f"在 {py_file.relative_to(self.project_root)} 中发现潜在{severity.value}风险",
-                                location=str(py_file.relative_to(self.project_root)),
+                                location=str(
+                                    py_file.relative_to(self.project_root)
+                                ),
                                 evidence=f"匹配模式: {pattern}",
                                 impact=impact,
                                 attacker_profile="外部攻击者或恶意用户",
                                 attack_vector=f"通过构造恶意输入触发危险代码路径",
                                 code_path=f"{py_file.relative_to(self.project_root)}",
-                                remediation=self._get_remediation(severity, category),
+                                remediation=self._get_remediation(
+                                    severity, category
+                                ),
                             )
                             self.findings.append(finding)
                             self.stats[severity.value] += 1
@@ -337,8 +381,12 @@ class SecurityAuditor:
         print(f"  - 信息: {self.stats['info']}")
 
         # 打印关键发现
-        critical_findings = [f for f in self.findings if f.severity == Severity.CRITICAL]
-        high_findings = [f for f in self.findings if f.severity == Severity.HIGH]
+        critical_findings = [
+            f for f in self.findings if f.severity == Severity.CRITICAL
+        ]
+        high_findings = [
+            f for f in self.findings if f.severity == Severity.HIGH
+        ]
 
         if not critical_findings and not high_findings:
             print("\n✅ 未发现严重或高危漏洞！")
@@ -354,18 +402,23 @@ class SecurityAuditor:
         """保存报告"""
         if format == "json":
             with open(output_path, "w", encoding="utf-8") as f:
-                json.dump({
-                    "metadata": {
-                        "project": "ai-agent-repair-tool",
-                        "version": "1.3.0",
-                        "audit_date": datetime.now().isoformat(),
+                json.dump(
+                    {
+                        "metadata": {
+                            "project": "ai-agent-repair-tool",
+                            "version": "1.3.0",
+                            "audit_date": datetime.now().isoformat(),
+                        },
+                        "summary": {
+                            "total_findings": len(self.findings),
+                            "by_severity": self.stats,
+                        },
+                        "findings": [asdict(f) for f in self.findings],
                     },
-                    "summary": {
-                        "total_findings": len(self.findings),
-                        "by_severity": self.stats,
-                    },
-                    "findings": [asdict(f) for f in self.findings],
-                }, f, indent=2, ensure_ascii=False)
+                    f,
+                    indent=2,
+                    ensure_ascii=False,
+                )
         elif format == "markdown":
             self._save_markdown_report(output_path)
 
@@ -394,60 +447,68 @@ class SecurityAuditor:
         ]
 
         if not self.findings:
-            lines.extend([
-                "## 审计结果",
-                "",
-                "✅ **审计完成——未发现中等或更高严重度的已确认漏洞。**",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## 审计结果",
+                    "",
+                    "✅ **审计完成——未发现中等或更高严重度的已确认漏洞。**",
+                    "",
+                ]
+            )
         else:
-            lines.extend([
-                "## 详细发现",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## 详细发现",
+                    "",
+                ]
+            )
 
             for finding in self.findings:
-                lines.extend([
-                    f"### {finding.id}: {finding.title}",
-                    "",
-                    f"**严重度**: {finding.severity.value.upper()}",
-                    "",
-                    f"**类别**: {finding.category}",
-                    "",
-                    f"**位置**: `{finding.location}`",
-                    "",
-                    f"**描述**: {finding.description}",
-                    "",
-                    f"**证据**: {finding.evidence}",
-                    "",
-                    f"**影响**: {finding.impact}",
-                    "",
-                    f"**攻击者画像**: {finding.attacker_profile}",
-                    "",
-                    f"**攻击向量**: {finding.attack_vector}",
-                    "",
-                    f"**代码路径**: {finding.code_path}",
-                    "",
-                    f"**修复建议**: {finding.remediation}",
-                    "",
-                    "---",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"### {finding.id}: {finding.title}",
+                        "",
+                        f"**严重度**: {finding.severity.value.upper()}",
+                        "",
+                        f"**类别**: {finding.category}",
+                        "",
+                        f"**位置**: `{finding.location}`",
+                        "",
+                        f"**描述**: {finding.description}",
+                        "",
+                        f"**证据**: {finding.evidence}",
+                        "",
+                        f"**影响**: {finding.impact}",
+                        "",
+                        f"**攻击者画像**: {finding.attacker_profile}",
+                        "",
+                        f"**攻击向量**: {finding.attack_vector}",
+                        "",
+                        f"**代码路径**: {finding.code_path}",
+                        "",
+                        f"**修复建议**: {finding.remediation}",
+                        "",
+                        "---",
+                        "",
+                    ]
+                )
 
-        lines.extend([
-            "## 审计方法",
-            "",
-            "本次审计采用以下分组系统性地检查高风险攻击面：",
-            "",
-            "1. **认证与访问控制**：登录流程、会话管理、角色/权限校验",
-            "2. **注入向量**：原始 SQL 查询、Shell 命令拼接、模板渲染、文件路径操作",
-            "3. **外部交互**：Webhook 处理器、出站网络请求、第三方 API 集成",
-            "4. **敏感数据处理**：代码或配置中的密钥、凭证或 PII 的日志记录、加密实践",
-            "",
-            "## 声明",
-            "",
-            "本报告仅代表审计时的代码状态。代码库持续更新，建议定期进行安全审计。",
-        ])
+        lines.extend(
+            [
+                "## 审计方法",
+                "",
+                "本次审计采用以下分组系统性地检查高风险攻击面：",
+                "",
+                "1. **认证与访问控制**：登录流程、会话管理、角色/权限校验",
+                "2. **注入向量**：原始 SQL 查询、Shell 命令拼接、模板渲染、文件路径操作",
+                "3. **外部交互**：Webhook 处理器、出站网络请求、第三方 API 集成",
+                "4. **敏感数据处理**：代码或配置中的密钥、凭证或 PII 的日志记录、加密实践",
+                "",
+                "## 声明",
+                "",
+                "本报告仅代表审计时的代码状态。代码库持续更新，建议定期进行安全审计。",
+            ]
+        )
 
         output_path.write_text("\n".join(lines), encoding="utf-8")
 
@@ -457,22 +518,25 @@ def main():
         description="AI Agent Repair Tool - 安全审计工具"
     )
     parser.add_argument(
-        "--output", "-o",
+        "--output",
+        "-o",
         type=str,
         default="security_audit_report.md",
-        help="输出文件路径 (默认: security_audit_report.md)"
+        help="输出文件路径 (默认: security_audit_report.md)",
     )
     parser.add_argument(
-        "--format", "-f",
+        "--format",
+        "-f",
         choices=["json", "markdown"],
         default="markdown",
-        help="报告格式 (默认: markdown)"
+        help="报告格式 (默认: markdown)",
     )
     parser.add_argument(
-        "--project", "-p",
+        "--project",
+        "-p",
         type=str,
         default=None,
-        help="项目路径 (默认: 当前目录)"
+        help="项目路径 (默认: 当前目录)",
     )
 
     args = parser.parse_args()
@@ -485,7 +549,7 @@ def main():
 
     # 执行审计
     auditor = SecurityAuditor(project_root)
-    report = auditor.audit()
+    auditor.audit()
 
     # 保存报告
     output_path = Path(args.output)

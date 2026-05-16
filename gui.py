@@ -4,36 +4,40 @@ Tiangong (天工) - AI Agent Repair Tool
 Desktop GUI interface for guided repair workflow
 """
 
-import os
-import sys
 import json
-import shutil
+import os
 import platform
+import shutil
 import stat
-import time
+import sys
 import threading
+import time
+import urllib.parse
 import webbrowser
-from pathlib import Path
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
-from typing import Dict, List, Tuple, Optional
-from dataclasses import dataclass, field, asdict
-import urllib.parse
+from pathlib import Path
+from typing import Dict, List, Optional
 
 # Windows 终端强制 UTF-8 编码
-if sys.platform == 'win32':
-    os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
+if sys.platform == "win32":
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
-from agent_registry import AGENT_PATHS, get_agent_links, load_repair_knowledge_base
-from core.config_scanner import ConfigScanner, AgentConfigScan
-from core.env_detector import EnvironmentDetector, detect_environment
-from core.download_manager import DownloadManager, DownloadMode, download_manager
-from core.auto_installer import AutoInstaller, auto_installer
-
+from agent_registry import (
+    AGENT_PATHS,
+    get_agent_links,
+    load_repair_knowledge_base,
+)
+from core.auto_installer import auto_installer
+from core.config_scanner import ConfigScanner
+from core.download_manager import DownloadMode, download_manager
+from core.env_detector import EnvironmentDetector
 
 # ============================================================
 # 数据模型
 # ============================================================
+
 
 @dataclass
 class AgentStatus:
@@ -46,18 +50,24 @@ class AgentStatus:
     status: str = "pending"  # pending, scanning, scanned, fixing, fixed, error
     config_scan: Optional[Dict] = None  # 配置扫描结果
 
+
 @dataclass
 class RepairStep:
     step_id: str
     name: str
     description: str
-    status: str = "pending"  # pending, running, success, warning, error, skipped
+    status: str = (
+        "pending"  # pending, running, success, warning, error, skipped
+    )
     detail: str = ""
     requires_confirm: bool = False
 
+
 @dataclass
 class SessionState:
-    current_phase: str = "idle"  # idle, scanning, preview, review, confirming, fixing, done
+    current_phase: str = (
+        "idle"  # idle, scanning, preview, review, confirming, fixing, done
+    )
     agents: List[Dict] = field(default_factory=list)
     steps: List[Dict] = field(default_factory=list)
     current_step: int = 0
@@ -71,6 +81,7 @@ class SessionState:
 # ============================================================
 # 修复引擎
 # ============================================================
+
 
 class RepairEngine:
     def __init__(self):
@@ -86,15 +97,23 @@ class RepairEngine:
         self.auto_installer = auto_installer
         # 记录环境日志
         if self.env_detector.is_virtual_environment():
-            self.session.log.append(f"⚠️ 检测到虚拟环境: {self.env_detector.info.type_display}")
+            self.session.log.append(
+                f"⚠️ 检测到虚拟环境: {self.env_detector.info.type_display}"
+            )
             if self.env_detector.is_cross_environment():
-                self.session.log.append(f"  可访问主机文件系统: {', '.join(self.env_detector.info.host_mount_points)}")
-                self.session.log.append(f"  目标系统: {self.env_detector.info.target_system or '未知'}")
+                self.session.log.append(
+                    f"  可访问主机文件系统: {', '.join(self.env_detector.info.host_mount_points)}"
+                )
+                self.session.log.append(
+                    f"  目标系统: {self.env_detector.info.target_system or '未知'}"
+                )
 
     def get_os(self):
         system = platform.system().lower()
-        if system == "windows": return "win"
-        elif system == "darwin": return "mac"
+        if system == "windows":
+            return "win"
+        elif system == "darwin":
+            return "mac"
         return "linux"
 
     def expand_path(self, path):
@@ -112,11 +131,15 @@ class RepairEngine:
                 path = self.expand_path(path_template)
                 if path.exists():
                     # 验证路径有效性
-                    valid, msg = self.env_detector.validate_agent_path(agent_id, str(path))
+                    valid, msg = self.env_detector.validate_agent_path(
+                        agent_id, str(path)
+                    )
                     if valid:
                         return path
                     else:
-                        self.session.log.append(f"  ⚠️ {config.get('name', agent_id)}: {msg}")
+                        self.session.log.append(
+                            f"  ⚠️ {config.get('name', agent_id)}: {msg}"
+                        )
             except (OSError, ValueError):
                 continue
         return None
@@ -127,8 +150,8 @@ class RepairEngine:
             config_file = agent_path / cf
             if config_file.exists():
                 try:
-                    with open(config_file, 'r', encoding='utf-8') as f:
-                        if cf.endswith('.json'):
+                    with open(config_file, "r", encoding="utf-8") as f:
+                        if cf.endswith(".json"):
                             json.load(f)
                 except json.JSONDecodeError:
                     issues.append(f"配置文件损坏: {cf}")
@@ -147,7 +170,7 @@ class RepairEngine:
             if cache_path.exists():
                 try:
                     total_size = 0
-                    for f in cache_path.rglob('*'):
+                    for f in cache_path.rglob("*"):
                         if f.is_file() and not f.is_symlink():
                             try:
                                 total_size += f.stat().st_size
@@ -171,7 +194,7 @@ class RepairEngine:
                 agent_id=agent_id,
                 name=config["name"],
                 icon=config["icon"],
-                status="scanning"
+                status="scanning",
             )
             self.session.log.append(f"正在扫描 {config['name']}...")
 
@@ -201,37 +224,39 @@ class RepairEngine:
     def scan_config_details(self):
         """详细扫描配置信息"""
         self.session.log.append("\n开始详细配置扫描...")
-        
+
         # 使用ConfigScanner扫描所有Agent的详细配置
         results = self.config_scanner.scan_all_agents(AGENT_PATHS)
-        
+
         # 转换为字典存储
         self.session.config_scan_results = {
             agent_id: result.to_dict()
             for agent_id, result in results.items()
             if result.is_installed  # 只保存已安装的
         }
-        
+
         # 更新agents中的config_scan
         for agent in self.session.agents:
             if agent["agent_id"] in self.session.config_scan_results:
-                agent["config_scan"] = self.session.config_scan_results[agent["agent_id"]]
-        
+                agent["config_scan"] = self.session.config_scan_results[
+                    agent["agent_id"]
+                ]
+
         # 统计信息
         installed_count = len(self.session.config_scan_results)
         total_plugins = sum(
-            r.get("total_plugins", 0) 
+            r.get("total_plugins", 0)
             for r in self.session.config_scan_results.values()
         )
         total_mcp = sum(
-            len(r.get("mcp_servers", [])) 
+            len(r.get("mcp_servers", []))
             for r in self.session.config_scan_results.values()
         )
-        
+
         self.session.log.append(f"  已扫描 {installed_count} 个Agent")
         self.session.log.append(f"  发现 {total_plugins} 个插件")
         self.session.log.append(f"  发现 {total_mcp} 个MCP服务器")
-        
+
         return asdict(self.session)
 
     def export_scan_report(self, format_type="json"):
@@ -239,14 +264,14 @@ class RepairEngine:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         report_dir = Path.home() / ".ai_agent_repair" / "reports"
         report_dir.mkdir(parents=True, exist_ok=True)
-        
+
         if format_type == "json":
             report_path = report_dir / f"config_scan_{timestamp}.json"
             self.config_scanner.export_to_json(report_path)
         else:
             report_path = report_dir / f"config_scan_{timestamp}.md"
             self.config_scanner.export_to_markdown(report_path)
-        
+
         self.session.scan_report_path = str(report_path)
         self.session.log.append(f"扫描报告已保存: {report_path}")
         return str(report_path)
@@ -263,40 +288,56 @@ class RepairEngine:
             agent_id = agent["agent_id"]
 
             # Step 1: 备份
-            self.session.steps.append(asdict(RepairStep(
-                step_id=f"{agent_id}_backup",
-                name=f"备份 {agent_name}",
-                description=f"将 {agent_name} 的配置文件备份到安全位置",
-                requires_confirm=True
-            )))
+            self.session.steps.append(
+                asdict(
+                    RepairStep(
+                        step_id=f"{agent_id}_backup",
+                        name=f"备份 {agent_name}",
+                        description=f"将 {agent_name} 的配置文件备份到安全位置",
+                        requires_confirm=True,
+                    )
+                )
+            )
 
             # Step 2: 清理缓存
             cache_issues = [i for i in agent["issues"] if "缓存" in i]
             if cache_issues:
-                self.session.steps.append(asdict(RepairStep(
-                    step_id=f"{agent_id}_cache",
-                    name=f"清理 {agent_name} 缓存",
-                    description=f"清理过大的缓存文件: {', '.join(cache_issues)}",
-                    requires_confirm=True
-                )))
+                self.session.steps.append(
+                    asdict(
+                        RepairStep(
+                            step_id=f"{agent_id}_cache",
+                            name=f"清理 {agent_name} 缓存",
+                            description=f"清理过大的缓存文件: {', '.join(cache_issues)}",
+                            requires_confirm=True,
+                        )
+                    )
+                )
 
             # Step 3: 修复配置
             config_issues = [i for i in agent["issues"] if "配置" in i]
             if config_issues:
-                self.session.steps.append(asdict(RepairStep(
-                    step_id=f"{agent_id}_config",
-                    name=f"修复 {agent_name} 配置",
-                    description=f"修复损坏的配置文件: {', '.join(config_issues)}",
-                    requires_confirm=True
-                )))
+                self.session.steps.append(
+                    asdict(
+                        RepairStep(
+                            step_id=f"{agent_id}_config",
+                            name=f"修复 {agent_name} 配置",
+                            description=f"修复损坏的配置文件: {', '.join(config_issues)}",
+                            requires_confirm=True,
+                        )
+                    )
+                )
 
             # Step 4: 验证
-            self.session.steps.append(asdict(RepairStep(
-                step_id=f"{agent_id}_verify",
-                name=f"验证 {agent_name}",
-                description="重新检查确认所有问题已修复",
-                requires_confirm=False
-            )))
+            self.session.steps.append(
+                asdict(
+                    RepairStep(
+                        step_id=f"{agent_id}_verify",
+                        name=f"验证 {agent_name}",
+                        description="重新检查确认所有问题已修复",
+                        requires_confirm=False,
+                    )
+                )
+            )
 
         self.session.current_phase = "confirming"
         return asdict(self.session)
@@ -310,7 +351,9 @@ class RepairEngine:
         self.session.current_step = step_index
 
         agent_id = step["step_id"].rsplit("_", 1)[0]
-        agent = next((a for a in self.session.agents if a["agent_id"] == agent_id), None)
+        agent = next(
+            (a for a in self.session.agents if a["agent_id"] == agent_id), None
+        )
         if not agent:
             step["status"] = "skipped"
             return asdict(self.session)
@@ -321,13 +364,18 @@ class RepairEngine:
             if "_backup" in step["step_id"]:
                 backup_dir = Path.home() / ".ai_agent_backups"
                 backup_dir.mkdir(exist_ok=True)
-                backup_name = f"{agent_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                backup_name = (
+                    f"{agent_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                )
                 backup_path = backup_dir / backup_name
                 if backup_path.exists():
                     shutil.rmtree(backup_path)
                 shutil.copytree(
-                    agent_path, backup_path,
-                    ignore=shutil.ignore_patterns('cache', 'Cache', 'temp', 'Temp')
+                    agent_path,
+                    backup_path,
+                    ignore=shutil.ignore_patterns(
+                        "cache", "Cache", "temp", "Temp"
+                    ),
                 )
                 step["status"] = "success"
                 step["detail"] = f"备份已保存: {backup_path}"
@@ -343,7 +391,9 @@ class RepairEngine:
                                 if item.is_file() or item.is_symlink():
                                     item.unlink()
                                 elif item.is_dir():
-                                    shutil.rmtree(item, onerror=self._remove_readonly)
+                                    shutil.rmtree(
+                                        item, onerror=self._remove_readonly
+                                    )
                                 cleaned += 1
                             except:
                                 pass
@@ -357,13 +407,17 @@ class RepairEngine:
                     config_file = agent_path / cf
                     if config_file.exists():
                         try:
-                            with open(config_file, 'r', encoding='utf-8') as f:
+                            with open(config_file, "r", encoding="utf-8") as f:
                                 json.load(f)
                         except json.JSONDecodeError:
-                            broken = config_file.with_suffix('.json.broken')
+                            broken = config_file.with_suffix(".json.broken")
                             shutil.copy2(config_file, broken)
-                            with open(config_file, 'w', encoding='utf-8') as f:
-                                json.dump({"version": "1.0.0", "settings": {}}, f, indent=2)
+                            with open(config_file, "w", encoding="utf-8") as f:
+                                json.dump(
+                                    {"version": "1.0.0", "settings": {}},
+                                    f,
+                                    indent=2,
+                                )
                             fixed += 1
                 step["status"] = "success"
                 step["detail"] = f"已修复 {fixed} 个配置文件"
@@ -375,8 +429,12 @@ class RepairEngine:
                 issues.extend(self.check_cache(agent_path))
                 if issues:
                     step["status"] = "warning"
-                    step["detail"] = f"仍有 {len(issues)} 个问题: {', '.join(issues)}"
-                    self.session.log.append(f"  ⚠ {agent['name']} 验证: 仍有问题")
+                    step["detail"] = (
+                        f"仍有 {len(issues)} 个问题: {', '.join(issues)}"
+                    )
+                    self.session.log.append(
+                        f"  ⚠ {agent['name']} 验证: 仍有问题"
+                    )
                 else:
                     step["status"] = "success"
                     step["detail"] = "所有问题已修复"
@@ -388,15 +446,24 @@ class RepairEngine:
             self.session.log.append(f"  ✗ 错误: {e}")
 
         # 检查是否所有步骤完成
-        if all(s["status"] in ("success", "warning", "skipped") for s in self.session.steps):
+        if all(
+            s["status"] in ("success", "warning", "skipped")
+            for s in self.session.steps
+        ):
             self.session.current_phase = "done"
-            success = sum(1 for s in self.session.steps if s["status"] == "success")
+            success = sum(
+                1 for s in self.session.steps if s["status"] == "success"
+            )
             total = len(self.session.steps)
             self.session.summary = {
                 "total_steps": total,
                 "success": success,
-                "warnings": sum(1 for s in self.session.steps if s["status"] == "warning"),
-                "errors": sum(1 for s in self.session.steps if s["status"] == "error"),
+                "warnings": sum(
+                    1 for s in self.session.steps if s["status"] == "warning"
+                ),
+                "errors": sum(
+                    1 for s in self.session.steps if s["status"] == "error"
+                ),
             }
 
         return asdict(self.session)
@@ -420,6 +487,7 @@ class RepairEngine:
 
 engine = RepairEngine()
 
+
 class RepairHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(Path(__file__).parent), **kwargs)
@@ -438,9 +506,11 @@ class RepairHandler(SimpleHTTPRequestHandler):
         elif parsed.path == "/test":
             # 提供简化版测试页面
             try:
-                with open('test_simple.html', 'r', encoding='utf-8') as f:
+                with open("test_simple.html", "r", encoding="utf-8") as f:
                     self.send_response(200)
-                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header(
+                        "Content-Type", "text/html; charset=utf-8"
+                    )
                     self.end_headers()
                     self.wfile.write(f.read().encode("utf-8"))
             except FileNotFoundError:
@@ -448,9 +518,11 @@ class RepairHandler(SimpleHTTPRequestHandler):
         elif parsed.path == "/debug":
             # 提供调试页面
             try:
-                with open('debug.html', 'r', encoding='utf-8') as f:
+                with open("debug.html", "r", encoding="utf-8") as f:
                     self.send_response(200)
-                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header(
+                        "Content-Type", "text/html; charset=utf-8"
+                    )
                     self.end_headers()
                     self.wfile.write(f.read().encode("utf-8"))
             except FileNotFoundError:
@@ -466,12 +538,15 @@ class RepairHandler(SimpleHTTPRequestHandler):
             threading.Thread(target=self._scan_config, daemon=True).start()
             self._json_response({"status": "config_scan_started"})
         elif parsed.path == "/api/export-report":
-            format_type = urllib.parse.parse_qs(parsed.query).get("format", ["json"])[0]
+            format_type = urllib.parse.parse_qs(parsed.query).get(
+                "format", ["json"]
+            )[0]
             path = engine.export_scan_report(format_type)
             self._json_response({"status": "exported", "path": path})
         elif parsed.path == "/api/downloads/add":
             # 添加下载项
             from urllib.parse import parse_qs
+
             params = parse_qs(parsed.query)
             item_id = params.get("id", [""])[0]
             name = params.get("name", [""])[0]
@@ -479,10 +554,22 @@ class RepairHandler(SimpleHTTPRequestHandler):
             size = int(params.get("size", ["0"])[0])
             mode = params.get("mode", ["auto"])[0]
             item = engine.download_manager.add_download(
-                item_id, name, url, size,
-                DownloadMode.AUTO if mode == "auto" else DownloadMode.LINK_ONLY
+                item_id,
+                name,
+                url,
+                size,
+                (
+                    DownloadMode.AUTO
+                    if mode == "auto"
+                    else DownloadMode.LINK_ONLY
+                ),
             )
-            self._json_response({"status": "added", "item": engine.download_manager._item_to_dict(item)})
+            self._json_response(
+                {
+                    "status": "added",
+                    "item": engine.download_manager._item_to_dict(item),
+                }
+            )
         elif parsed.path == "/api/downloads/links":
             # 获取所有下载链接
             links = engine.download_manager.get_download_links()
@@ -494,29 +581,39 @@ class RepairHandler(SimpleHTTPRequestHandler):
             self._json_response({"downloads": status})
         elif parsed.path == "/api/downloads/start":
             from urllib.parse import parse_qs
+
             params = parse_qs(parsed.query)
             item_id = params.get("id", [""])[0]
             result = engine.download_manager.start_download(item_id)
-            self._json_response({"status": result.success, "result": asdict(result)})
+            self._json_response(
+                {"status": result.success, "result": asdict(result)}
+            )
         elif parsed.path == "/api/auto-install/scan":
             # 扫描下载目录
             try:
                 engine.auto_installer.scan_downloads()
                 files = engine.auto_installer.get_detected_files()
-                self._json_response({"detected": files, "total": len(files), "files": files})
+                self._json_response(
+                    {"detected": files, "total": len(files), "files": files}
+                )
             except Exception as e:
-                self._json_response({"detected": [], "total": 0, "files": [], "error": str(e)})
+                self._json_response(
+                    {"detected": [], "total": 0, "files": [], "error": str(e)}
+                )
         elif parsed.path == "/api/auto-install/files":
             # 获取所有检测到的文件
             files = engine.auto_installer.get_detected_files()
             self._json_response({"files": files})
         elif parsed.path == "/api/auto-install/install":
             from urllib.parse import parse_qs
+
             params = parse_qs(parsed.query)
             file_id = params.get("id", [""])[0]
             success, message = engine.auto_installer.install_file(file_id)
             status = engine.auto_installer.get_file_status(file_id)
-            self._json_response({"success": success, "message": message, "status": status})
+            self._json_response(
+                {"success": success, "message": message, "status": status}
+            )
         elif parsed.path == "/api/auto-install/start-monitoring":
             engine.auto_installer.start_monitoring()
             self._json_response({"status": "monitoring_started"})
@@ -527,7 +624,9 @@ class RepairHandler(SimpleHTTPRequestHandler):
             state = engine.build_repair_plan()
             self._json_response(state)
         elif parsed.path == "/api/execute-step":
-            idx = int(urllib.parse.parse_qs(parsed.query).get("index", ["0"])[0])
+            idx = int(
+                urllib.parse.parse_qs(parsed.query).get("index", ["0"])[0]
+            )
             state = engine.execute_step(idx)
             self._json_response(state)
         elif parsed.path == "/api/execute-all":
@@ -545,14 +644,27 @@ class RepairHandler(SimpleHTTPRequestHandler):
             else:
                 try:
                     import pathlib
+
                     fp = pathlib.Path(file_path)
                     if not fp.exists():
-                        self._json_response({"error": f"文件不存在: {file_path}"})
+                        self._json_response(
+                            {"error": f"文件不存在: {file_path}"}
+                        )
                     elif fp.stat().st_size > 512 * 1024:
-                        self._json_response({"error": "文件过大（>512KB），请用编辑器打开"})
+                        self._json_response(
+                            {"error": "文件过大（>512KB），请用编辑器打开"}
+                        )
                     else:
-                        content = fp.read_text(encoding='utf-8', errors='replace')
-                        self._json_response({"path": str(fp), "content": content, "size": fp.stat().st_size})
+                        content = fp.read_text(
+                            encoding="utf-8", errors="replace"
+                        )
+                        self._json_response(
+                            {
+                                "path": str(fp),
+                                "content": content,
+                                "size": fp.stat().st_size,
+                            }
+                        )
                 except Exception as e:
                     self._json_response({"error": str(e)})
         elif parsed.path == "/api/knowledge-base":
@@ -590,10 +702,15 @@ class RepairHandler(SimpleHTTPRequestHandler):
             print("[DEBUG] Scan started")
             time.sleep(0.5)  # 模拟扫描延迟
             result = engine.scan_all()
-            print(f"[DEBUG] Scan completed, phase: {result.get('current_phase')}")
-            print(f"[DEBUG] Agents found: {len([a for a in result.get('agents', []) if a.get('installed')])}")
+            print(
+                f"[DEBUG] Scan completed, phase: {result.get('current_phase')}"
+            )
+            print(
+                f"[DEBUG] Agents found: {len([a for a in result.get('agents', []) if a.get('installed')])}"
+            )
         except Exception as e:
             import traceback
+
             print(f"[ERROR] Scan failed: {e}")
             traceback.print_exc()
             engine.session.log.append(f"扫描失败: {str(e)}")
@@ -615,7 +732,9 @@ class RepairHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        self.wfile.write(json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8"))
+        self.wfile.write(
+            json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+        )
 
 
 # ============================================================
@@ -2555,8 +2674,9 @@ def find_free_port(start=8080, end=8100):
     for port in range(start, end):
         try:
             import socket
+
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.bind(('127.0.0.1', port))
+            s.bind(("127.0.0.1", port))
             s.close()
             return port
         except OSError:
@@ -2566,8 +2686,8 @@ def find_free_port(start=8080, end=8100):
 
 def main():
     port = find_free_port()
-    server = HTTPServer(('127.0.0.1', port), RepairHandler)
-    
+    server = HTTPServer(("127.0.0.1", port), RepairHandler)
+
     print("=" * 60)
     print("AI Agent 智能修复工具 - 操控界面")
     print("=" * 60)
@@ -2576,9 +2696,9 @@ def main():
     print(f"地址: http://127.0.0.1:{port}")
     print("=" * 60)
     print("正在打开浏览器...")
-    
-    webbrowser.open(f'http://127.0.0.1:{port}')
-    
+
+    webbrowser.open(f"http://127.0.0.1:{port}")
+
     try:
         server.serve_forever()
     except KeyboardInterrupt:
