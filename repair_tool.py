@@ -5,24 +5,24 @@ Tiangong - AI Agent Repair Tool
 支持: Cursor, Claude Code, OpenCode, Windsurf, Cline, Aider, Copilot, Continue, Roo Code, Augment Code, Hermes-Agent
 """
 
-import os
-import sys
 import json
-import shutil
+import os
 import platform
+import shutil
 import stat
+import sys
 import time
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional
+from pathlib import Path
+from typing import List, Optional, Tuple
 
 # Windows 终端强制 UTF-8 编码
-if sys.platform == 'win32':
-    os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
+if sys.platform == "win32":
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 from agent_registry import AGENT_PATHS
-from core.audit_logger import get_audit_logger, OperationType, OperationStatus
-from core.i18n import _, set_language, get_language, get_available_languages
+from core.audit_logger import OperationStatus, OperationType, get_audit_logger
+from core.i18n import _, get_language
 
 # 全局审计日志实例
 audit = get_audit_logger()
@@ -30,30 +30,35 @@ audit = get_audit_logger()
 
 class RepairResult:
     """修复结果记录"""
+
     def __init__(self, agent_id: str, agent_path: Path):
         self.agent_id = agent_id
         self.agent_path = agent_path
-        self.agent_name = AGENT_PATHS.get(agent_id, {}).get('name', agent_id)
+        self.agent_name = AGENT_PATHS.get(agent_id, {}).get("name", agent_id)
         self.backup_created = False
         self.backup_path: Optional[Path] = None
         self.cache_cleaned = 0
         self.config_fixed = 0
         self.errors: List[str] = []
         self.warnings: List[str] = []
-        
+
     def add_error(self, msg: str):
         self.errors.append(msg)
-        
+
     def add_warning(self, msg: str):
         self.warnings.append(msg)
-        
+
     def is_success(self) -> bool:
         """修复是否成功（没有错误）"""
         return len(self.errors) == 0
-        
+
     def has_changes(self) -> bool:
         """是否有实际修复操作"""
-        return self.backup_created or self.cache_cleaned > 0 or self.config_fixed > 0
+        return (
+            self.backup_created
+            or self.cache_cleaned > 0
+            or self.config_fixed > 0
+        )
 
 
 def get_os():
@@ -110,8 +115,8 @@ def check_config(agent_path: Path) -> List[str]:
         config_file = agent_path / cf
         if config_file.exists():
             try:
-                with open(config_file, 'r', encoding='utf-8') as f:
-                    if cf.endswith('.json'):
+                with open(config_file, "r", encoding="utf-8") as f:
+                    if cf.endswith(".json"):
                         json.load(f)
             except json.JSONDecodeError:
                 issues.append(f"配置文件损坏: {cf}")
@@ -135,7 +140,7 @@ def check_cache(agent_path: Path) -> List[str]:
         if cache_path.exists():
             try:
                 total_size = 0
-                for f in cache_path.rglob('*'):
+                for f in cache_path.rglob("*"):
                     if f.is_file() and not f.is_symlink():
                         total_size += _safe_get_size(f)
                 size_mb = total_size / (1024 * 1024)
@@ -175,7 +180,9 @@ def scan_all() -> List[Tuple[str, Path, List[str]]]:
             issues.extend(check_cache(path))
 
             if issues:
-                print(f"  Status: ! {_('scan_found_issues', count=len(issues))}")
+                print(
+                    f"  Status: ! {_('scan_found_issues', count=len(issues))}"
+                )
                 for issue in issues:
                     print(f"    - {issue}")
                 found_agents.append((agent_id, path, issues))
@@ -185,7 +192,7 @@ def scan_all() -> List[Tuple[str, Path, List[str]]]:
                     agent_id=agent_id,
                     target_path=path,
                     status=OperationStatus.WARNING,
-                    details={"issues_found": len(issues), "issues": issues}
+                    details={"issues_found": len(issues), "issues": issues},
                 )
             else:
                 print(f"  Status: ✓ {_('agent_status_healthy')}")
@@ -195,7 +202,7 @@ def scan_all() -> List[Tuple[str, Path, List[str]]]:
                     agent_id=agent_id,
                     target_path=path,
                     status=OperationStatus.SUCCESS,
-                    details={"issues_found": 0}
+                    details={"issues_found": 0},
                 )
 
     return found_agents
@@ -212,6 +219,7 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
     修复Agent，返回详细结果
     """
     import time
+
     result = RepairResult(agent_id, agent_path)
     print(f"\n  >>> {_('repairing_agent', agent_name=result.agent_name)}")
 
@@ -231,8 +239,9 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
 
     try:
         shutil.copytree(
-            agent_path, backup_path,
-            ignore=shutil.ignore_patterns('cache', 'Cache', 'temp', 'Temp')
+            agent_path,
+            backup_path,
+            ignore=shutil.ignore_patterns("cache", "Cache", "temp", "Temp"),
         )
         result.backup_created = True
         result.backup_path = backup_path
@@ -244,27 +253,27 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
             target_path=backup_path,
             status=OperationStatus.SUCCESS,
             details={"backup_name": backup_name, "source": str(agent_path)},
-            duration_ms=int((time.time() - backup_start) * 1000)
+            duration_ms=int((time.time() - backup_start) * 1000),
         )
     except PermissionError as e:
-        result.add_error(_('backup_failed', error=str(e)))
+        result.add_error(_("backup_failed", error=str(e)))
         audit.log_operation(
             operation=OperationType.BACKUP,
             agent_id=agent_id,
             target_path=backup_path,
             status=OperationStatus.FAILED,
             error_message=str(e),
-            details={"error_type": "PermissionError"}
+            details={"error_type": "PermissionError"},
         )
     except OSError as e:
-        result.add_error(_('backup_failed', error=str(e)))
+        result.add_error(_("backup_failed", error=str(e)))
         audit.log_operation(
             operation=OperationType.BACKUP,
             agent_id=agent_id,
             target_path=backup_path,
             status=OperationStatus.FAILED,
             error_message=str(e),
-            details={"error_type": "OSError"}
+            details={"error_type": "OSError"},
         )
 
     # 2. 清理缓存
@@ -291,9 +300,13 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
                 cleaned += 1
             except PermissionError:
                 result.add_warning(f"Cannot access cache directory: {cd}")
-    
+
     result.cache_cleaned = cleaned
-    cache_status = OperationStatus.SUCCESS if not failed_caches else OperationStatus.WARNING
+    cache_status = (
+        OperationStatus.SUCCESS
+        if not failed_caches
+        else OperationStatus.WARNING
+    )
     audit.log_operation(
         operation=OperationType.CACHE_CLEAN,
         agent_id=agent_id,
@@ -302,9 +315,9 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
         details={
             "cleaned_dirs": cleaned,
             "failed_items": len(failed_caches),
-            "cache_dirs": cache_dirs
+            "cache_dirs": cache_dirs,
         },
-        duration_ms=int((time.time() - cache_start) * 1000)
+        duration_ms=int((time.time() - cache_start) * 1000),
     )
     if cleaned > 0:
         print(f"          ✓ 已清理 {cleaned} 个缓存目录")
@@ -317,23 +330,23 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
     config_files = ["settings.json", "config.json"]
     fixed = 0
     failed_configs = []
-    
+
     for cf in config_files:
         config_file = agent_path / cf
         if config_file.exists():
             try:
-                with open(config_file, 'r', encoding='utf-8') as f:
+                with open(config_file, "r", encoding="utf-8") as f:
                     json.load(f)
                 # 文件正常，无需修复
             except json.JSONDecodeError:
                 # 配置文件损坏，需要修复
                 try:
                     # 备份损坏的文件
-                    broken = config_file.with_suffix('.json.broken')
+                    broken = config_file.with_suffix(".json.broken")
                     shutil.copy2(config_file, broken)
                     # 生成默认配置
                     default = {"version": "1.0.0", "settings": {}}
-                    with open(config_file, 'w', encoding='utf-8') as f:
+                    with open(config_file, "w", encoding="utf-8") as f:
                         json.dump(default, f, indent=2)
                     fixed += 1
                     print(f"          ✓ 已修复: {cf}")
@@ -341,9 +354,13 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
                     failed_configs.append(f"{cf}({e})")
             except OSError as e:
                 failed_configs.append(f"{cf}({e})")
-    
+
     result.config_fixed = fixed
-    config_status = OperationStatus.SUCCESS if not failed_configs else OperationStatus.FAILED
+    config_status = (
+        OperationStatus.SUCCESS
+        if not failed_configs
+        else OperationStatus.FAILED
+    )
     audit.log_operation(
         operation=OperationType.CONFIG_FIX,
         agent_id=agent_id,
@@ -352,10 +369,10 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
         details={
             "fixed_files": fixed,
             "failed_files": len(failed_configs),
-            "config_files": config_files
+            "config_files": config_files,
         },
         error_message="; ".join(failed_configs) if failed_configs else None,
-        duration_ms=int((time.time() - config_start) * 1000)
+        duration_ms=int((time.time() - config_start) * 1000),
     )
     if fixed > 0:
         print(f"          ✓ 已修复 {fixed} 个配置文件")
@@ -366,29 +383,33 @@ def fix_agent(agent_id: str, agent_path: Path) -> RepairResult:
     if result.is_success():
         print(f"      ✓ {result.agent_name} 修复完成")
     else:
-        print(f"      ⚠ {result.agent_name} 修复完成，但有 {len(result.errors)} 个错误")
-    
+        print(
+            f"      ⚠ {result.agent_name} 修复完成，但有 {len(result.errors)} 个错误"
+        )
+
     return result
 
 
-def verify_fix(agent_path: Path, original_issues: List[str]) -> Tuple[bool, List[str]]:
+def verify_fix(
+    agent_path: Path, original_issues: List[str]
+) -> Tuple[bool, List[str]]:
     """
     验证修复是否成功
     返回: (是否全部修复, 仍存在的问题)
     """
     remaining_issues = []
-    
+
     # 重新检查配置
     config_issues = check_config(agent_path)
     remaining_issues.extend(config_issues)
-    
+
     # 重新检查缓存
     cache_issues = check_cache(agent_path)
     remaining_issues.extend(cache_issues)
-    
+
     # 检查是否还有原来的问题
-    fixed_count = len(original_issues) - len(remaining_issues)
-    
+    len(original_issues) - len(remaining_issues)
+
     return len(remaining_issues) == 0, remaining_issues
 
 
@@ -397,29 +418,31 @@ def print_summary(results: List[RepairResult]):
     print("\n" + "=" * 60)
     print("修复摘要报告")
     print("=" * 60)
-    
+
     total = len(results)
     success = sum(1 for r in results if r.is_success())
     with_changes = sum(1 for r in results if r.has_changes())
     total_errors = sum(len(r.errors) for r in results)
     total_warnings = sum(len(r.warnings) for r in results)
-    
+
     print(f"\n总体统计:")
     print(f"  修复Agent数: {total}")
     print(f"  完全成功: {success}/{total}")
     print(f"  有实际修复: {with_changes}")
     print(f"  错误数: {total_errors}")
     print(f"  警告数: {total_warnings}")
-    
+
     # 详细报告
     for result in results:
         print(f"\n[{result.agent_name}]")
         print(f"  路径: {result.agent_path}")
         print(f"  状态: {'✓ 成功' if result.is_success() else '⚠ 有错误'}")
-        print(f"  备份: {'✓ ' + str(result.backup_path) if result.backup_created else '✗ 失败'}")
+        print(
+            f"  备份: {'✓ ' + str(result.backup_path) if result.backup_created else '✗ 失败'}"
+        )
         print(f"  清理缓存: {result.cache_cleaned}个目录")
         print(f"  修复配置: {result.config_fixed}个文件")
-        
+
         if result.errors:
             print(f"  错误:")
             for err in result.errors:
@@ -428,7 +451,7 @@ def print_summary(results: List[RepairResult]):
             print(f"  警告:")
             for warn in result.warnings:
                 print(f"    - {warn}")
-    
+
     print("\n" + "=" * 60)
     print(f"备份位置: {Path.home() / '.ai_agent_backups'}")
     print("=" * 60)
@@ -436,7 +459,7 @@ def print_summary(results: List[RepairResult]):
 
 def _wait_for_exit():
     """等待用户按键退出，非交互环境自动跳过"""
-    if '--no-wait' in sys.argv or '--batch' in sys.argv:
+    if "--no-wait" in sys.argv or "--batch" in sys.argv:
         return
     try:
         if sys.stdin.isatty():
@@ -454,11 +477,12 @@ def main():
     except Exception as e:
         print(f"扫描出错: {e}")
         import traceback
+
         audit.log_operation(
             operation=OperationType.SCAN,
             status=OperationStatus.FAILED,
             error_message=str(e),
-            stack_trace=traceback.format_exc()
+            stack_trace=traceback.format_exc(),
         )
         audit.end_session({"error": str(e)})
         return
@@ -466,7 +490,7 @@ def main():
     if not found:
         print("\n[OK] 未发现需要修复的Agent")
         audit.end_session({"agents_found": 0, "agents_repaired": 0})
-        batch_mode = '--no-wait' in sys.argv or '--batch' in sys.argv
+        batch_mode = "--no-wait" in sys.argv or "--batch" in sys.argv
         if not batch_mode:
             print("\n按任意键退出...")
             _wait_for_exit()
@@ -475,7 +499,7 @@ def main():
     print(f"\n[!] 发现 {len(found)} 个Agent需要修复")
 
     # 批量模式跳过倒计时
-    batch_mode = '--no-wait' in sys.argv or '--batch' in sys.argv
+    batch_mode = "--no-wait" in sys.argv or "--batch" in sys.argv
     if not batch_mode:
         print("[!] 3秒后开始自动修复...")
         print("    (按 Ctrl+C 取消)")
@@ -490,11 +514,11 @@ def main():
             audit.log_operation(
                 operation=OperationType.SCAN,
                 status=OperationStatus.SKIPPED,
-                details={"reason": "user_cancelled"}
+                details={"reason": "user_cancelled"},
             )
             audit.end_session({"cancelled": True})
             return
-    
+
     print("\n" + "-" * 60)
     print("开始自动修复...")
     print("-" * 60)
@@ -504,7 +528,7 @@ def main():
     for agent_id, path, issues in found:
         result = fix_agent(agent_id, path)
         results.append(result)
-        
+
         # 验证修复
         if result.is_success() and result.has_changes():
             print(f"      [验证] 检查修复结果...")
@@ -516,7 +540,7 @@ def main():
                     agent_id=agent_id,
                     target_path=path,
                     status=OperationStatus.SUCCESS,
-                    details={"all_issues_fixed": True}
+                    details={"all_issues_fixed": True},
                 )
             else:
                 print(f"          ⚠ 仍有 {len(remaining)} 个问题未解决")
@@ -527,12 +551,15 @@ def main():
                     agent_id=agent_id,
                     target_path=path,
                     status=OperationStatus.WARNING,
-                    details={"all_issues_fixed": False, "remaining_issues": remaining}
+                    details={
+                        "all_issues_fixed": False,
+                        "remaining_issues": remaining,
+                    },
                 )
-    
+
     # 打印摘要
     print_summary(results)
-    
+
     # 结束审计会话
     summary = {
         "agents_found": len(found),
@@ -542,15 +569,15 @@ def main():
         "total_warnings": sum(len(r.warnings) for r in results),
         "backups_created": sum(1 for r in results if r.backup_created),
         "caches_cleaned": sum(r.cache_cleaned for r in results),
-        "configs_fixed": sum(r.config_fixed for r in results)
+        "configs_fixed": sum(r.config_fixed for r in results),
     }
     audit.end_session(summary)
-    
+
     # 显示审计日志位置
     print(f"\n审计日志位置: {Path.home() / '.ai_agent_repair' / 'audit_logs'}")
     print("=" * 60)
 
-    batch_mode = '--no-wait' in sys.argv or '--batch' in sys.argv
+    batch_mode = "--no-wait" in sys.argv or "--batch" in sys.argv
     if not batch_mode:
         print("\n按任意键退出...")
         _wait_for_exit()

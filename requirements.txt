@@ -2,7 +2,7 @@
 
 # 核心依赖
 pyyaml>=6.0
-urllib3>=2.0
+urllib3>=2.7.0
 
 # API Server 依赖
 aiohttp>=3.9.0
@@ -11,3 +11,4 @@ aiohttp-cors>=0.7.0
 # 打包成可执行文件时需要:
 # pip install pyinstaller
 pyinstaller>=5.0
+lxml>=6.1.0

