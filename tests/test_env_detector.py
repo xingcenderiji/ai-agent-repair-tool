@@ -173,7 +173,10 @@ class TestEnvironmentDetector(unittest.TestCase):
     @patch('core.env_detector.subprocess.run')
     def test_detect_wsl2(self, mock_run, mock_exists):
         """测试WSL2检测"""
-        mock_exists.side_effect = lambda p: "WSLInterop" in str(p) or "WSL" in str(p)
+        def mock_exists_func(self=None):
+            path_str = str(self) if self else ""
+            return "WSLInterop" in path_str or "WSL" in path_str
+        mock_exists.side_effect = mock_exists_func
         mock_run.return_value = MagicMock(
             returncode=0,
             stdout="5.15.90.1-microsoft-standard-WSL2",
@@ -226,7 +229,9 @@ class TestEnvironmentDetector(unittest.TestCase):
     @patch('core.env_detector.subprocess.run')
     def test_detect_docker(self, mock_run, mock_exists):
         """测试Docker检测"""
-        mock_exists.side_effect = lambda p: ".dockerenv" in str(p)
+        def mock_exists_func(self=None):
+            return ".dockerenv" in str(self) if self else False
+        mock_exists.side_effect = mock_exists_func
         mock_run.return_value = MagicMock(
             returncode=0,
             stdout="docker",
@@ -435,8 +440,8 @@ VERSION_ID="22.04"
         
         # 模拟同时存在WSL和Docker标记
         with patch('core.env_detector.Path.exists') as mock_exists:
-            def side_effect(path):
-                path_str = str(path)
+            def side_effect(self=None):
+                path_str = str(self) if self else ""
                 return any(marker in path_str for marker in [
                     "WSLInterop", ".dockerenv", ".containerenv"
                 ])

@@ -8,6 +8,8 @@ import json
 import time
 import threading
 import hashlib
+import urllib.request
+import urllib.error
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Callable, Tuple
@@ -178,8 +180,6 @@ class DownloadManager:
     
     def _download_file(self, item: DownloadItem) -> DownloadResult:
         """执行文件下载"""
-        import urllib.request
-        import urllib.error
         
         # 目标路径
         filename = item.name

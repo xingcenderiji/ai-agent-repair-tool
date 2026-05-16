@@ -436,6 +436,8 @@ def print_summary(results: List[RepairResult]):
 
 def _wait_for_exit():
     """等待用户按键退出，非交互环境自动跳过"""
+    if '--no-wait' in sys.argv or '--batch' in sys.argv:
+        return
     try:
         if sys.stdin.isatty():
             input()
@@ -464,28 +466,34 @@ def main():
     if not found:
         print("\n[OK] 未发现需要修复的Agent")
         audit.end_session({"agents_found": 0, "agents_repaired": 0})
-        print("\n按任意键退出...")
-        _wait_for_exit()
+        batch_mode = '--no-wait' in sys.argv or '--batch' in sys.argv
+        if not batch_mode:
+            print("\n按任意键退出...")
+            _wait_for_exit()
         return
 
     print(f"\n[!] 发现 {len(found)} 个Agent需要修复")
-    print("[!] 3秒后开始自动修复...")
-    print("    (按 Ctrl+C 取消)")
-    
-    # 倒计时
-    try:
-        for i in range(3, 0, -1):
-            print(f"    {i}...")
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\n\n已取消修复")
-        audit.log_operation(
-            operation=OperationType.SCAN,
-            status=OperationStatus.SKIPPED,
-            details={"reason": "user_cancelled"}
-        )
-        audit.end_session({"cancelled": True})
-        return
+
+    # 批量模式跳过倒计时
+    batch_mode = '--no-wait' in sys.argv or '--batch' in sys.argv
+    if not batch_mode:
+        print("[!] 3秒后开始自动修复...")
+        print("    (按 Ctrl+C 取消)")
+
+        # 倒计时
+        try:
+            for i in range(3, 0, -1):
+                print(f"    {i}...")
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n\n已取消修复")
+            audit.log_operation(
+                operation=OperationType.SCAN,
+                status=OperationStatus.SKIPPED,
+                details={"reason": "user_cancelled"}
+            )
+            audit.end_session({"cancelled": True})
+            return
     
     print("\n" + "-" * 60)
     print("开始自动修复...")
@@ -541,9 +549,11 @@ def main():
     # 显示审计日志位置
     print(f"\n审计日志位置: {Path.home() / '.ai_agent_repair' / 'audit_logs'}")
     print("=" * 60)
-    
-    print("\n按任意键退出...")
-    _wait_for_exit()
+
+    batch_mode = '--no-wait' in sys.argv or '--batch' in sys.argv
+    if not batch_mode:
+        print("\n按任意键退出...")
+        _wait_for_exit()
 
 
 if __name__ == "__main__":

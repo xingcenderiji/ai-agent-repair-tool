@@ -191,7 +191,7 @@ class AuditLogger:
         session_file = self.log_dir / f"session_{self.current_session.session_id}.json"
         try:
             with open(session_file, 'w', encoding='utf-8') as f:
-                json.dumps(asdict(self.current_session), f, indent=2, ensure_ascii=False)
+                json.dump(asdict(self.current_session), f, indent=2, ensure_ascii=False)
         except Exception as e:
             logger.error(f"[审计] 保存会话日志失败: {e}")
         

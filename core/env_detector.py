@@ -99,10 +99,14 @@ class EnvironmentDetector:
                 text=True, timeout=timeout
             )
             return result.returncode, result.stdout.strip(), result.stderr.strip()
+        except FileNotFoundError:
+            return -1, "", "命令不存在"
+        except subprocess.TimeoutExpired:
+            return -1, "", "命令超时"
         except (ValueError, subprocess.SubprocessError):
             # 降级处理：仅用于预定义的内部系统检测命令，无注入风险 # noqa: safe
             result = subprocess.run(
-                cmd, shell=True, capture_output=True, 
+                cmd, shell=True, capture_output=True,
                 text=True, timeout=timeout
             )
             return result.returncode, result.stdout.strip(), result.stderr.strip()

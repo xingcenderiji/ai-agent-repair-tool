@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-05-16
+
+### Fixed
+- 🐛 修复审计日志写入失败问题
+  - `core/audit_logger.py` 中 `json.dumps` 误用为 `json.dump`，导致会话日志保存失败
+  - 修复人: Claude Code (mimo-v2.5-pro)
+- 🐛 修复命令执行异常处理
+  - `core/env_detector.py` 添加 `FileNotFoundError` 和 `subprocess.TimeoutExpired` 专用异常处理
+  - 修复"命令不存在"和"命令超时"错误信息本地化
+  - 修复人: Claude Code (mimo-v2.5-pro)
+- 🐛 修复下载管理器 mock 测试兼容性
+  - `core/download_manager.py` 将 `urllib.request` 提升为模块级导入
+  - 解决 Python 3.13 下 unittest.mock 无法 patch 局部导入的问题
+  - 修复人: Claude Code (mimo-v2.5-pro)
+- 🐛 修复测试套件兼容性问题
+  - `tests/test_env_detector.py` 修复 `Path.exists` mock 签名，适配 Python 3.13
+  - `tests/test_security.py` 从 pytest 风格迁移至 unittest.TestCase，移除 pytest 依赖
+  - 修复人: Claude Code (mimo-v2.5-pro)
+
+### Added
+- ✨ CLI 批量模式支持
+  - 添加 `--batch` / `--no-wait` 命令行参数
+  - 批量模式跳过倒计时和"按任意键退出"提示
+  - 适用于 CI/CD 管道和自动化脚本
+  - 修复人: Claude Code (mimo-v2.5-pro)
+
+### Changed
+- 📦 补全缺失依赖
+  - `requirements.txt` 添加 `aiohttp>=3.9.0` 和 `aiohttp-cors>=0.7.0`
+  - 修复 API Server 因缺少依赖无法启动的问题
+  - 修复人: Claude Code (mimo-v2.5-pro)
+- ✅ 测试套件从 227 个测试扩展至 252 个，全部通过（1 个跳过）
+
 ## [1.4.0] - 2026-05-15
 
 ### Added
@@ -102,7 +135,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/xingcenderiji/ai-agent-repair-tool/compare/v1.0.0...v1.1.0
