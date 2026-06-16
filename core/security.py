@@ -127,7 +127,7 @@ class PathValidator:
                 resolved = Path(os.path.expandvars(os.path.expanduser(path))).resolve()
                 self._blacklist_resolved.add(str(resolved))
                 self._blacklist_resolved.add(str(resolved).lower())
-            except:
+            except Exception:
                 pass
         # 敏感用户目录
         for path in SENSITIVE_USER_DIRS:
@@ -135,7 +135,7 @@ class PathValidator:
                 resolved = Path(os.path.expandvars(os.path.expanduser(path))).resolve()
                 self._blacklist_resolved.add(str(resolved))
                 self._blacklist_resolved.add(str(resolved).lower())
-            except:
+            except Exception:
                 pass
 
     def is_safe_path(self, path: Path) -> Tuple[bool, str]:
@@ -181,6 +181,10 @@ class PathValidator:
         if not resolved_lower.startswith(home.lower()):
             return False, f"路径不在用户主目录下: {resolved_str}"
 
+        # 4.1 主目录本身安全
+        if resolved_lower == home.lower():
+            return True, "安全"
+
         # 5. 检查白名单（宽松模式 - 允许主目录下的AI工具目录）
         safe = False
         for prefix in SAFE_PATH_PREFIXES:
@@ -189,7 +193,7 @@ class PathValidator:
                 if resolved_lower.startswith(str(expanded).lower()):
                     safe = True
                     break
-            except:
+            except Exception:
                 pass
 
         # 如果不在白名单中但在主目录下，给出警告但允许（用于社区新工具）
@@ -513,7 +517,7 @@ class AuditLogger:
             try:
                 with open(log_file, 'r', encoding='utf-8') as f:
                     result.append(json.load(f))
-            except:
+            except Exception:
                 pass
         return result
 

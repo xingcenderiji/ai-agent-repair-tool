@@ -222,7 +222,7 @@ class AutoInstaller:
         for cb in self._callbacks:
             try:
                 cb(file_info)
-            except:
+            except Exception:
                 pass
     
     def _format_size(self, size_bytes: int) -> str:
@@ -520,7 +520,7 @@ class AutoInstaller:
         while not self._stop_event.is_set():
             try:
                 self.scan_downloads()
-            except:
+            except Exception:
                 pass
             self._stop_event.wait(interval)
     

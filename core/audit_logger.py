@@ -424,7 +424,7 @@ class AuditLogger:
                         "end_time": data.get("end_time"),
                         "summary": data.get("summary", {})
                     })
-            except:
+            except Exception:
                 pass
         
         return sessions

@@ -45,7 +45,7 @@ class IncrementalBackup:
             try:
                 with open(self.manifest_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except Exception:
                 pass
         return {}
     
@@ -62,7 +62,7 @@ class IncrementalBackup:
                 for chunk in iter(lambda: f.read(8192), b''):
                     hash_obj.update(chunk)
             return hash_obj.hexdigest()
-        except:
+        except Exception:
             return ""
     
     def _get_file_info(self, file_path: Path) -> Dict:
@@ -74,7 +74,7 @@ class IncrementalBackup:
                 "mtime": stat.st_mtime,
                 "hash": self._calculate_hash(file_path)
             }
-        except:
+        except Exception:
             return {}
     
     def should_backup(self, source_path: Path, relative_path: str) -> bool:

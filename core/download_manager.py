@@ -77,7 +77,7 @@ class DownloadManager:
         for cb in self._callbacks:
             try:
                 cb(item)
-            except:
+            except Exception:
                 pass
     
     def add_download(self, item_id: str, name: str, url: str, 

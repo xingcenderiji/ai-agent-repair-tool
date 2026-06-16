@@ -104,7 +104,12 @@ class EnvironmentDetector:
         except subprocess.TimeoutExpired:
             return -1, "", "命令超时"
         except (ValueError, subprocess.SubprocessError):
-            # 降级处理：仅用于预定义的内部系统检测命令，无注入风险 # noqa: safe
+            # 降级处理：仅用于预定义的内部系统检测命令
+            # 安全措施：只允许已知的安全命令
+            safe_commands = {'uname', 'whoami', 'id', 'date', 'pwd', 'ls', 'cat', 'which'}
+            cmd_name = cmd.split()[0] if isinstance(cmd, str) else str(cmd)
+            if cmd_name not in safe_commands:
+                return -1, "", f"命令不在安全列表中: {cmd_name}"
             result = subprocess.run(
                 cmd, shell=True, capture_output=True,
                 text=True, timeout=timeout
@@ -135,7 +140,7 @@ class EnvironmentDetector:
                     match = re.search(r'PRETTY_NAME="([^"]+)"', content)
                     if match:
                         self.info.os_release = match.group(1)
-            except:
+            except Exception:
                 pass
         elif self.info.os_name == "Windows":
             code, out, _ = self._run_cmd("cmd.exe /c ver")
@@ -177,7 +182,7 @@ class EnvironmentDetector:
                     match = re.search(r'name\s*=\s*"?([^"\n]+)"?', content)
                     if match:
                         self.info.wsl_distro = match.group(1).strip()
-                except:
+                except Exception:
                     pass
             
             # 检测能否访问Windows
@@ -236,7 +241,7 @@ class EnvironmentDetector:
                             self.info.type = EnvironmentType.VM
                             self.info.warnings.append(f"🖧 检测到虚拟机: {marker}")
                             break
-                except:
+                except Exception:
                     pass
     
     def _validate_paths(self):

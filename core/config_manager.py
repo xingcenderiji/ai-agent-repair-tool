@@ -70,7 +70,7 @@ class ConfigManager:
                 with open(package_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     version = data.get("version", "unknown")
-            except:
+            except Exception:
                 pass
         
         # 2. 尝试从 version 文件读取
@@ -81,7 +81,7 @@ class ConfigManager:
                     try:
                         version = version_file.read_text().strip()
                         break
-                    except:
+                    except Exception:
                         pass
         
         # 3. 尝试从配置文件读取
@@ -95,7 +95,7 @@ class ConfigManager:
                             version = data.get("version", "unknown")
                             if version != "unknown":
                                 break
-                    except:
+                    except Exception:
                         pass
         
         return version
@@ -154,7 +154,7 @@ class ConfigManager:
             try:
                 with open(version_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except Exception:
                 pass
         
         # 尝试加载默认配置
@@ -163,7 +163,7 @@ class ConfigManager:
             try:
                 with open(default_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except Exception:
                 pass
         
         return None
@@ -189,7 +189,7 @@ class ConfigManager:
             try:
                 with open(cache_path, 'r', encoding='utf-8') as f:
                     config_data = json.load(f)
-            except:
+            except Exception:
                 pass
         
         # 2. 尝试从远程下载

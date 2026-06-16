@@ -479,7 +479,7 @@ class AutoFixEngine:
                     else:
                         full_path.unlink()
                     cleaned += 1
-                except:
+                except Exception:
                     pass
         
         return True, f"已清理 {cleaned} 个缓存项"

@@ -300,7 +300,7 @@ class AIAgentRepairTool:
                         version = data.get('version', 'unknown')
                     else:
                         version = f.read().strip()
-            except:
+            except Exception:
                 pass
         
         if not issues:

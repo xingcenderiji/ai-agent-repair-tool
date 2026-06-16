@@ -286,9 +286,9 @@ class ConfigScanner:
                                 source=str(item)
                             )
                             result.external_plugins.append(plugin)
-                        except:
+                        except Exception:
                             pass
-        except:
+        except Exception:
             pass
         
         result.total_plugins = len(result.external_plugins)
@@ -309,7 +309,7 @@ class ConfigScanner:
                 )
                 result.mcp_servers.append(server)
                 result.servers.append(server)
-        except:
+        except Exception:
             pass
     
     def scan_claude_config(self, agent_path: Path) -> AgentConfigScan:
@@ -613,9 +613,9 @@ class ConfigScanner:
                             # 简单提取关键信息
                             if '"mcpServers"' in content or '"servers"' in content:
                                 result.warnings.append(f"发现服务器配置: {item.name}")
-                        except:
+                        except Exception:
                             pass
-        except:
+        except Exception:
             pass
     
     def scan_all_agents(self, agent_registry: Dict) -> Dict[str, AgentConfigScan]:

@@ -345,7 +345,7 @@ class RepairEngine:
                                 elif item.is_dir():
                                     shutil.rmtree(item, onerror=self._remove_readonly)
                                 cleaned += 1
-                            except:
+                            except Exception:
                                 pass
                 step["status"] = "success"
                 step["detail"] = f"已清理 {cleaned} 个缓存项"

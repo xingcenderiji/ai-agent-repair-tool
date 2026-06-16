@@ -72,7 +72,7 @@ def _detect_system_language() -> str:
             lang_code = system_locale.split('_')[0].lower()
             if lang_code in SUPPORTED_LANGUAGES:
                 return lang_code
-    except:
+    except Exception:
         pass
     
     # 检查环境变量
